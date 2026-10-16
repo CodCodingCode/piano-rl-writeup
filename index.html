@@ -1,0 +1,2724 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Shadow Hands Learn Piano</title>
+    <meta
+      name="description"
+      content="How two Shadow Hands learned to play a song on an 88-key MuJoCo piano with PPO and no pretraining."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    />
+    <style>
+      :root {
+        --bg: #fafafa;
+        --surface: #f2f2f1;
+        --text: #111;
+        --muted: #888;
+        --line: rgba(136, 136, 136, 0.28);
+        --line-soft: rgba(136, 136, 136, 0.16);
+        --accent: #a85a22;
+        --accent-soft: rgba(168, 90, 34, 0.12);
+        --key: #ffffff;
+        --key-edge: rgba(17, 17, 17, 0.35);
+        --black-key: #1a1a1a;
+        --font: "Inter", ui-sans-serif, system-ui, sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        --col: 620px;
+        --wide: 1200px;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #0d0d0e;
+          --surface: #161617;
+          --text: #f3f3f2;
+          --muted: #8d8d8a;
+          --line: rgba(141, 141, 138, 0.3);
+          --line-soft: rgba(141, 141, 138, 0.16);
+          --accent: #e2904f;
+          --accent-soft: rgba(226, 144, 79, 0.14);
+          --key: #d8d8d4;
+          --key-edge: rgba(0, 0, 0, 0.5);
+          --black-key: #0a0a0a;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #0d0d0e;
+        --surface: #161617;
+        --text: #f3f3f2;
+        --muted: #8d8d8a;
+        --line: rgba(141, 141, 138, 0.3);
+        --line-soft: rgba(141, 141, 138, 0.16);
+        --accent: #e2904f;
+        --accent-soft: rgba(226, 144, 79, 0.14);
+        --key: #d8d8d4;
+        --key-edge: rgba(0, 0, 0, 0.5);
+        --black-key: #0a0a0a;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      img,
+      video,
+      svg {
+        max-width: 100%;
+        display: block;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+        font-size: 16px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap {
+        max-width: var(--wide);
+        margin: 0 auto;
+        padding-inline: 20px;
+      }
+      .col {
+        max-width: var(--col);
+        margin-inline: auto;
+      }
+
+      h1,
+      h2,
+      h3 {
+        text-wrap: balance;
+        margin: 0;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+      }
+      h1 {
+        font-size: clamp(2rem, 6vw, 3.1rem);
+        line-height: 1.06;
+        letter-spacing: -0.04em;
+      }
+      h2 {
+        font-size: clamp(1.25rem, 3vw, 1.55rem);
+        line-height: 1.2;
+      }
+      h3 {
+        font-size: 1rem;
+        line-height: 1.35;
+      }
+      p {
+        margin: 0;
+      }
+      em {
+        font-style: italic;
+      }
+      .lede {
+        font-size: 1.1rem;
+      }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      code,
+      .m {
+        font-family: var(--mono);
+        font-size: 0.86em;
+      }
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1.05em;
+      }
+      .head {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
+        margin-bottom: 1.5em;
+      }
+
+      /* progress rail */
+      .progress {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 2px;
+        width: 100%;
+        z-index: 60;
+        pointer-events: none;
+      }
+      .progress i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--accent);
+      }
+
+      /* hero */
+      .hero {
+        padding-block: clamp(40px, 8vw, 84px) clamp(24px, 4vw, 40px);
+      }
+      .hero .stack {
+        max-width: var(--col);
+      }
+      .hero h1 {
+        max-width: 14ch;
+      }
+      .hero .lede {
+        max-width: 52ch;
+      }
+      .byline {
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        color: var(--muted);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4em 1.4em;
+      }
+      .frame {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        overflow: hidden;
+      }
+      .frame video {
+        width: 100%;
+        height: auto;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        line-height: 1.5;
+        color: var(--muted);
+        padding-top: 0.7em;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border: 1px solid var(--line);
+        max-width: var(--col);
+      }
+      .metric {
+        padding: 14px 16px;
+        border-left: 1px solid var(--line-soft);
+      }
+      .metric:first-child {
+        border-left: 0;
+      }
+      .metric .v {
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        font-variant-numeric: tabular-nums;
+      }
+      .metric .k {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      @media (max-width: 640px) {
+        .metrics {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .metric:nth-child(3) {
+          border-left: 0;
+        }
+        .metric:nth-child(n + 3) {
+          border-top: 1px solid var(--line-soft);
+        }
+      }
+
+      /* ============ scrollytelling ============ */
+      .scrolly {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        gap: clamp(28px, 4vw, 64px);
+        align-items: stretch;
+      }
+      .panel-col {
+        position: relative;
+      }
+      .panel {
+        position: sticky;
+        top: calc(env(safe-area-inset-top, 0px) + 28px);
+        width: 100%;height: auto;aspect-ratio: 16 / 10;max-height: min(74vh, 600px);
+        border: 1px solid var(--line);
+        background: var(--surface);
+        overflow: hidden;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.55s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+      .scene.active {
+        opacity: 1;
+        visibility: visible;
+      }
+      .scene video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .scene.diagram {
+        padding: clamp(12px, 2vw, 22px);
+        background: var(--surface);
+      }
+      .scene.diagram svg {
+        width: 100%;
+        height: auto;
+        max-height: 100%;
+      }
+      .scene-tag {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        background: var(--bg);
+        border-top: 1px solid var(--line-soft);
+        padding: 0.5em 0.8em;
+        display: flex;
+        justify-content: space-between;
+        gap: 1em;
+      }
+      .steps {
+        display: flex;
+        flex-direction: column;
+      }
+      .step {
+        min-height: 70vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-block: clamp(28px, 5vw, 56px);
+      }
+      .step.short {
+        min-height: auto;
+      }
+
+      @media (max-width: 900px) {
+        .scrolly {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0;
+        }
+        .panel-col {
+          position: sticky;
+          top: 0;
+          z-index: 30;
+          background: var(--bg);
+          padding-block: 10px;
+        }
+        .panel {
+          position: static;
+          height: 38vh;
+          min-height: 200px;
+        }
+        .step {
+          min-height: auto;
+          padding-block: 26px;
+        }
+        .steps {
+          padding-top: 8px;
+        }
+      }
+
+      /* reveal */
+      html.js-reveal .reveal {
+        transition:
+          opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+          transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      html.js-reveal .reveal:not(.in) {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      html.js-reveal .reveal.in {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* content bits */
+      section.band {
+        padding-block: clamp(44px, 7vw, 78px);
+        border-top: 1px solid var(--line-soft);
+      }
+      pre {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        line-height: 1.6;
+        background: var(--surface);
+        border: 1px solid var(--line-soft);
+        padding: 14px 16px;
+        overflow-x: auto;
+        margin-block: 1.4em;
+      }
+      pre.flowchart {
+        font-size: 0.66rem;
+        line-height: 1.45;
+        white-space: pre;
+      }
+      .eq {
+        font-family: var(--mono);
+        font-size: 0.9rem;
+        padding: 0.9em 0;
+        margin-block: 1.1em;
+        border-top: 1px solid var(--line-soft);
+        border-bottom: 1px solid var(--line-soft);
+        text-align: center;
+        overflow-x: auto;
+      }
+      .eq small {
+        display: block;
+        font-family: var(--font);
+        font-size: 0.76rem;
+        color: var(--muted);
+        margin-top: 0.5em;
+      }
+      ul.spec {
+        list-style: none;
+        padding: 0;
+        margin: 1.3em 0;
+        display: flex;
+        flex-direction: column;
+      }
+      ul.spec li {
+        display: grid;
+        grid-template-columns: 128px 1fr;
+        gap: 1em;
+        padding: 0.6em 0;
+        border-top: 1px solid var(--line-soft);
+      }
+      ul.spec li:last-child {
+        border-bottom: 1px solid var(--line-soft);
+      }
+      ul.spec b {
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        font-weight: 500;
+        color: var(--muted);
+        padding-top: 0.2em;
+      }
+      @media (max-width: 560px) {
+        ul.spec li {
+          grid-template-columns: 1fr;
+          gap: 0.15em;
+        }
+      }
+      .note {
+        border-left: 2px solid var(--line);
+        padding-left: 1.1em;
+        color: var(--muted);
+        font-size: 0.94rem;
+        margin-block: 1.5em;
+      }
+      .note b {
+        color: var(--text);
+      }
+      .tablewrap {
+        overflow-x: auto;
+        margin-block: 1.5em;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.86rem;
+        min-width: 420px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.55em 0.9em 0.55em 0;
+        border-bottom: 1px solid var(--line-soft);
+        vertical-align: top;
+      }
+      th {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      td.n,
+      th.n {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        font-family: var(--mono);
+        padding-right: 0;
+      }
+      tr.best td {
+        color: var(--accent);
+        font-weight: 500;
+      }
+      .duo {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      @media (max-width: 720px) {
+        .duo {
+          grid-template-columns: 1fr;
+        }
+      }
+      .figtitle {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1em;
+      }
+      .figbox {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        padding: clamp(14px, 2.4vw, 24px);
+      }
+      footer {
+        border-top: 1px solid var(--line-soft);
+        padding-block: 40px 60px;
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+      a {
+        color: inherit;
+        text-underline-offset: 3px;
+        text-decoration-color: var(--line);
+      }
+      a:hover {
+        text-decoration-color: var(--accent);
+      }
+
+      /* svg primitives */
+      .sv-line {
+        stroke: var(--line);
+        fill: none;
+      }
+      .sv-ink {
+        stroke: var(--text);
+        fill: none;
+      }
+      .sv-mut {
+        fill: var(--muted);
+      }
+      .sv-lab {
+        font-family: var(--mono);
+        font-size: 10px;
+        fill: var(--muted);
+      }
+      .sv-lab-s {
+        font-family: var(--mono);
+        font-size: 8.5px;
+        fill: var(--muted);
+      }
+      .sv-acc {
+        stroke: var(--accent);
+        fill: none;
+      }
+      .sv-accf {
+        fill: var(--accent);
+      }
+
+      @keyframes keyDamped {
+        0%,
+        6% {
+          transform: rotate(0);
+        }
+        13% {
+          transform: rotate(7deg);
+        }
+        26% {
+          transform: rotate(7deg);
+        }
+        33% {
+          transform: rotate(-1.1deg);
+        }
+        39% {
+          transform: rotate(0.35deg);
+        }
+        45% {
+          transform: rotate(-0.1deg);
+        }
+        52%,
+        100% {
+          transform: rotate(0);
+        }
+      }
+      @keyframes keyFree {
+        0%,
+        6% {
+          transform: rotate(0);
+        }
+        13% {
+          transform: rotate(7deg);
+        }
+        26% {
+          transform: rotate(7deg);
+        }
+        32% {
+          transform: rotate(-5.6deg);
+        }
+        38% {
+          transform: rotate(5.1deg);
+        }
+        44% {
+          transform: rotate(-4.6deg);
+        }
+        50% {
+          transform: rotate(4.2deg);
+        }
+        56% {
+          transform: rotate(-3.8deg);
+        }
+        62% {
+          transform: rotate(3.4deg);
+        }
+        68% {
+          transform: rotate(-3.1deg);
+        }
+        74% {
+          transform: rotate(2.8deg);
+        }
+        80% {
+          transform: rotate(-2.5deg);
+        }
+        86% {
+          transform: rotate(2.3deg);
+        }
+        92% {
+          transform: rotate(-2deg);
+        }
+        100% {
+          transform: rotate(1.9deg);
+        }
+      }
+      @keyframes fingerPress {
+        0%,
+        6% {
+          transform: translateY(0);
+        }
+        13%,
+        26% {
+          transform: translateY(13px);
+        }
+        33%,
+        100% {
+          transform: translateY(0);
+        }
+      }
+      @keyframes soundOn {
+        0%,
+        11% {
+          opacity: 0;
+        }
+        14%,
+        27% {
+          opacity: 1;
+        }
+        31%,
+        100% {
+          opacity: 0;
+        }
+      }
+      @keyframes soundChatter {
+        0%,
+        11% {
+          opacity: 0;
+        }
+        14%,
+        30% {
+          opacity: 1;
+        }
+        32%,
+        35% {
+          opacity: 0;
+        }
+        36%,
+        40% {
+          opacity: 1;
+        }
+        42%,
+        46% {
+          opacity: 0;
+        }
+        48%,
+        52% {
+          opacity: 1;
+        }
+        54%,
+        100% {
+          opacity: 0;
+        }
+      }
+      .k-damped {
+        animation: keyDamped 5s cubic-bezier(0.3, 0, 0.3, 1) infinite;
+      }
+      .k-free {
+        animation: keyFree 5s linear infinite;
+      }
+      .k-finger {
+        animation: fingerPress 5s cubic-bezier(0.3, 0, 0.3, 1) infinite;
+      }
+      .k-sound {
+        animation: soundOn 5s linear infinite;
+      }
+      .k-chatter {
+        animation: soundChatter 5s linear infinite;
+      }
+      .hinge {
+        transform-box: fill-box;
+        transform-origin: left center;
+      }
+
+      @keyframes mcpCurl {
+        0%,
+        10% {
+          transform: rotate(0);
+        }
+        45%,
+        60% {
+          transform: rotate(38deg);
+        }
+        95%,
+        100% {
+          transform: rotate(0);
+        }
+      }
+      @keyframes pipCurl {
+        0%,
+        16% {
+          transform: rotate(0);
+        }
+        50%,
+        65% {
+          transform: rotate(52deg);
+        }
+        95%,
+        100% {
+          transform: rotate(0);
+        }
+      }
+      @keyframes dipCurl {
+        0%,
+        20% {
+          transform: rotate(0);
+        }
+        54%,
+        68% {
+          transform: rotate(40deg);
+        }
+        95%,
+        100% {
+          transform: rotate(0);
+        }
+      }
+      @keyframes tendonPull {
+        0%,
+        14% {
+          stroke-dashoffset: 0;
+        }
+        50%,
+        66% {
+          stroke-dashoffset: -26;
+        }
+        95%,
+        100% {
+          stroke-dashoffset: 0;
+        }
+      }
+      .j-mcp {
+        animation: mcpCurl 4.6s cubic-bezier(0.4, 0, 0.3, 1) infinite;
+        transform-box: fill-box;
+        transform-origin: left center;
+      }
+      .j-pip {
+        animation: pipCurl 4.6s cubic-bezier(0.4, 0, 0.3, 1) infinite;
+        transform-box: fill-box;
+        transform-origin: left center;
+      }
+      .j-dip {
+        animation: dipCurl 4.6s cubic-bezier(0.4, 0, 0.3, 1) infinite;
+        transform-box: fill-box;
+        transform-origin: left center;
+      }
+      .tendon {
+        stroke-dasharray: 5 4;
+        animation: tendonPull 4.6s cubic-bezier(0.4, 0, 0.3, 1) infinite;
+      }
+
+      @keyframes railPlan {
+        0%,
+        22% {
+          transform: translateX(0);
+        }
+        38%,
+        56% {
+          transform: translateX(196px);
+        }
+        72% {
+          transform: translateX(96px);
+        }
+        100% {
+          transform: translateX(0);
+        }
+      }
+      @keyframes railReal {
+        0% {
+          transform: translateX(6px);
+        }
+        22% {
+          transform: translateX(2px);
+        }
+        40%,
+        56% {
+          transform: translateX(205px);
+        }
+        74% {
+          transform: translateX(90px);
+        }
+        100% {
+          transform: translateX(6px);
+        }
+      }
+      @keyframes leapLift {
+        0%,
+        24% {
+          transform: translateY(0);
+        }
+        40%,
+        54% {
+          transform: translateY(-11px);
+        }
+        70%,
+        100% {
+          transform: translateY(0);
+        }
+      }
+      .rail-plan {
+        animation: railPlan 7s cubic-bezier(0.45, 0, 0.3, 1) infinite;
+      }
+      .rail-real {
+        animation: railReal 7s cubic-bezier(0.4, 0, 0.25, 1) infinite;
+      }
+      .leap-hand {
+        animation: leapLift 7s cubic-bezier(0.45, 0, 0.3, 1) infinite;
+      }
+
+      @keyframes flowPulse {
+        0% {
+          stroke-dashoffset: 120;
+        }
+        100% {
+          stroke-dashoffset: 0;
+        }
+      }
+      .flow {
+        stroke-dasharray: 6 10;
+        animation: flowPulse 2.6s linear infinite;
+      }
+      @keyframes nodeGlow {
+        0%,
+        100% {
+          opacity: 0.25;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      .glow-a {
+        animation: nodeGlow 2.6s ease-in-out infinite;
+      }
+      .glow-b {
+        animation: nodeGlow 2.6s ease-in-out infinite 0.5s;
+      }
+      .glow-c {
+        animation: nodeGlow 2.6s ease-in-out infinite 1s;
+      }
+
+      .bar {
+        transform-box: fill-box;
+        transform-origin: center bottom;
+      }
+      html.js-reveal .chart .bar {
+        transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      html.js-reveal .chart:not(.in) .bar {
+        transform: scaleY(0);
+      }
+      html.js-reveal .chart .bar:nth-of-type(2) {
+        transition-delay: 0.06s;
+      }
+      html.js-reveal .chart .bar:nth-of-type(3) {
+        transition-delay: 0.12s;
+      }
+      html.js-reveal .chart .bar:nth-of-type(4) {
+        transition-delay: 0.18s;
+      }
+      html.js-reveal .chart .bar:nth-of-type(5) {
+        transition-delay: 0.24s;
+      }
+      html.js-reveal .chart .bar:nth-of-type(6) {
+        transition-delay: 0.3s;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+        html.js-reveal .reveal:not(.in) {
+          opacity: 1;
+          transform: none;
+        }
+        html.js-reveal .chart:not(.in) .bar {
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="progress" aria-hidden="true"><i id="progbar"></i></div>
+
+    <div class="wrap">
+      <!-- ===================== HERO ===================== -->
+      <header class="hero">
+        <div class="stack">
+          <div class="eyebrow">MuJoCo · PPO · from scratch</div>
+          <h1>Shadow hands learn to play the piano</h1>
+          <p class="lede">
+            Two 24 joint Shadow Hands, an 88 key spring loaded piano, and a MIDI
+            file of Nettspend's <em>we not like you</em>. No demonstrations, no
+            behaviour cloning, no pretrained weights. Only reinforcement
+            learning against the score.
+          </p>
+          <div class="byline">
+            <span>Nathan Yan</span><span>Sept 2026</span
+            ><span>1024 envs · 7,000 PPO iterations</span>
+          </div>
+        </div>
+        <figure style="margin-top: clamp(24px, 4vw, 40px)">
+          <div class="frame">
+            <video
+              src="media/sim_hands.mp4"
+              poster="media/poster_hands.png"
+              autoplay
+              loop
+              muted
+              playsinline
+            ></video>
+          </div>
+          <figcaption>
+            Best policy (v15, iteration 5346) rolled out in MuJoCo and
+            re-rendered from a camera that tracks the palms. Every finger motion
+            is the policy's output. Nothing is scripted except the rail servo's
+            setpoint.
+          </figcaption>
+        </figure>
+        <div class="metrics" style="margin-top: clamp(20px, 3vw, 28px)">
+          <div class="metric">
+            <div class="v">0.803</div>
+            <div class="k">F1</div>
+          </div>
+          <div class="metric">
+            <div class="v">0.914</div>
+            <div class="k">Precision</div>
+          </div>
+          <div class="metric">
+            <div class="v">0.715</div>
+            <div class="k">Recall</div>
+          </div>
+          <div class="metric">
+            <div class="v">52</div>
+            <div class="k">Actions</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ===================== SCROLLY ===================== -->
+      <div class="scrolly">
+        <!-- ---------- sticky panel ---------- -->
+        <div class="panel-col">
+          <div class="panel" id="panel">
+            <div class="scene" data-scene="top">
+              <video
+                src="media/sim_top.mp4"
+                loop
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
+              <div class="scene-tag">
+                <span>MuJoCo · top camera</span><span>v15 rollout</span>
+              </div>
+            </div>
+
+            <div class="scene" data-scene="keys">
+              <video
+                src="media/sim_keys.mp4"
+                loop
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
+              <div class="scene-tag">
+                <span>MuJoCo · key bed</span><span>88 hinge joints</span>
+              </div>
+            </div>
+
+            <div class="scene diagram" data-scene="damper">
+              <svg
+                viewBox="0 0 640 230"
+                role="img"
+                aria-label="Two piano keys pressed identically: the damped one settles after a single note on, the undamped one bounces and retriggers."
+              >
+                <text class="sv-lab" x="8" y="16">damping = 0.1 · settles</text>
+                <text class="sv-lab" x="336" y="16">
+                  damping = 0 · chatters
+                </text>
+                <g>
+                  <g class="k-finger">
+                    <rect
+                      x="112"
+                      y="40"
+                      width="16"
+                      height="44"
+                      rx="7"
+                      fill="var(--text)"
+                      opacity=".8"
+                    />
+                    <rect
+                      x="114"
+                      y="78"
+                      width="12"
+                      height="16"
+                      rx="5"
+                      fill="var(--text)"
+                    />
+                  </g>
+                  <line
+                    x1="40"
+                    y1="128"
+                    x2="280"
+                    y2="128"
+                    class="sv-line"
+                    stroke-dasharray="3 4"
+                  />
+                  <text class="sv-lab-s" x="40" y="124">sounds below here</text>
+                  <circle cx="44" cy="110" r="3.5" class="sv-mut" />
+                  <g class="hinge k-damped">
+                    <rect
+                      x="44"
+                      y="102"
+                      width="192"
+                      height="15"
+                      rx="2"
+                      fill="var(--key)"
+                      stroke="var(--key-edge)"
+                    />
+                  </g>
+                  <path
+                    d="M58 150 l8 -8 l-14 -6 l16 -7 l-14 -6 l14 -6"
+                    class="sv-line"
+                    stroke-width="1.4"
+                  />
+                  <text class="sv-lab-s" x="78" y="146">k = 3</text>
+                  <g transform="translate(78,160)">
+                    <rect
+                      x="0"
+                      y="0"
+                      width="18"
+                      height="12"
+                      class="sv-line"
+                      stroke-width="1.2"
+                    />
+                    <line
+                      x1="9"
+                      y1="-6"
+                      x2="9"
+                      y2="4"
+                      class="sv-line"
+                      stroke-width="1.2"
+                    />
+                    <text class="sv-lab-s" x="26" y="10">b = 0.1</text>
+                  </g>
+                  <g class="k-sound">
+                    <rect
+                      x="44"
+                      y="196"
+                      width="80"
+                      height="16"
+                      fill="var(--accent-soft)"
+                    />
+                    <text
+                      x="52"
+                      y="208"
+                      font-family="monospace"
+                      font-size="9.5"
+                      fill="var(--accent)"
+                    >
+                      note on x1
+                    </text>
+                  </g>
+                </g>
+                <line
+                  x1="306"
+                  y1="24"
+                  x2="306"
+                  y2="212"
+                  class="sv-line"
+                  stroke-dasharray="2 5"
+                />
+                <g transform="translate(332,0)">
+                  <g class="k-finger">
+                    <rect
+                      x="112"
+                      y="40"
+                      width="16"
+                      height="44"
+                      rx="7"
+                      fill="var(--text)"
+                      opacity=".8"
+                    />
+                    <rect
+                      x="114"
+                      y="78"
+                      width="12"
+                      height="16"
+                      rx="5"
+                      fill="var(--text)"
+                    />
+                  </g>
+                  <line
+                    x1="12"
+                    y1="128"
+                    x2="252"
+                    y2="128"
+                    class="sv-line"
+                    stroke-dasharray="3 4"
+                  />
+                  <circle cx="16" cy="110" r="3.5" class="sv-mut" />
+                  <g class="hinge k-free">
+                    <rect
+                      x="16"
+                      y="102"
+                      width="192"
+                      height="15"
+                      rx="2"
+                      fill="var(--key)"
+                      stroke="var(--key-edge)"
+                    />
+                  </g>
+                  <path
+                    d="M30 150 l8 -8 l-14 -6 l16 -7 l-14 -6 l14 -6"
+                    class="sv-line"
+                    stroke-width="1.4"
+                  />
+                  <text class="sv-lab-s" x="50" y="146">k = 3</text>
+                  <text class="sv-lab-s" x="50" y="170">no damper</text>
+                  <g class="k-chatter">
+                    <rect
+                      x="16"
+                      y="196"
+                      width="112"
+                      height="16"
+                      fill="var(--accent-soft)"
+                    />
+                    <text
+                      x="24"
+                      y="208"
+                      font-family="monospace"
+                      font-size="9.5"
+                      fill="var(--accent)"
+                    >
+                      note on x7 …
+                    </text>
+                  </g>
+                </g>
+              </svg>
+              <div class="scene-tag">
+                <span>spring and damper</span
+                ><span>why one press is one note</span>
+              </div>
+            </div>
+
+            <div class="scene" data-scene="finger">
+              <video
+                src="media/sim_finger.mp4"
+                loop
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
+              <div class="scene-tag">
+                <span>MuJoCo · right hand</span
+                ><span>Shadow Hand, 24 joints</span>
+              </div>
+            </div>
+
+            <div class="scene diagram" data-scene="tendon">
+              <svg
+                viewBox="0 0 640 210"
+                role="img"
+                aria-label="A finger curling: the knuckle has its own actuator while the middle and tip joints bend together on one tendon."
+              >
+                <rect
+                  x="24"
+                  y="68"
+                  width="92"
+                  height="62"
+                  rx="8"
+                  fill="var(--bg)"
+                  stroke="var(--line)"
+                />
+                <text class="sv-lab-s" x="44" y="104">palm</text>
+                <g transform="translate(116,88)">
+                  <g class="j-mcp">
+                    <rect
+                      x="0"
+                      y="-9"
+                      width="86"
+                      height="18"
+                      rx="9"
+                      fill="var(--text)"
+                      opacity=".85"
+                    />
+                    <circle
+                      cx="0"
+                      cy="0"
+                      r="6"
+                      fill="var(--bg)"
+                      stroke="var(--text)"
+                      stroke-width="2"
+                    />
+                    <g transform="translate(86,0)">
+                      <g class="j-pip">
+                        <rect
+                          x="0"
+                          y="-8"
+                          width="62"
+                          height="16"
+                          rx="8"
+                          fill="var(--text)"
+                          opacity=".85"
+                        />
+                        <circle
+                          cx="0"
+                          cy="0"
+                          r="5.5"
+                          fill="var(--bg)"
+                          stroke="var(--accent)"
+                          stroke-width="2"
+                        />
+                        <g transform="translate(62,0)">
+                          <g class="j-dip">
+                            <rect
+                              x="0"
+                              y="-7"
+                              width="44"
+                              height="14"
+                              rx="7"
+                              fill="var(--text)"
+                              opacity=".85"
+                            />
+                            <circle
+                              cx="0"
+                              cy="0"
+                              r="5"
+                              fill="var(--bg)"
+                              stroke="var(--accent)"
+                              stroke-width="2"
+                            />
+                            <circle cx="44" cy="0" r="6" class="sv-accf" />
+                          </g>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+                <g transform="translate(116,158)">
+                  <text class="sv-lab-s" x="-92" y="4">one tendon</text>
+                  <line
+                    x1="0"
+                    y1="0"
+                    x2="192"
+                    y2="0"
+                    class="sv-acc tendon"
+                    stroke-width="2"
+                  />
+                  <circle cx="86" cy="0" r="3" class="sv-accf" />
+                  <circle cx="148" cy="0" r="3" class="sv-accf" />
+                </g>
+                <text class="sv-lab" x="150" y="46">MCP</text>
+                <text class="sv-lab-s" x="150" y="60">own actuator</text>
+                <line
+                  x1="162"
+                  y1="52"
+                  x2="128"
+                  y2="76"
+                  class="sv-line"
+                  stroke-dasharray="2 3"
+                />
+                <text class="sv-lab" x="300" y="34" fill="var(--accent)">
+                  PIP + DIP
+                </text>
+                <text class="sv-lab-s" x="300" y="48">
+                  coupled, one actuator
+                </text>
+                <line
+                  x1="318"
+                  y1="54"
+                  x2="300"
+                  y2="74"
+                  class="sv-line"
+                  stroke-dasharray="2 3"
+                />
+                <text class="sv-lab-s" x="24" y="196">
+                  4 joints · 3 actuators per long finger
+                </text>
+              </svg>
+              <div class="scene-tag">
+                <span>tendon coupling</span><span>24 joints, 20 actuators</span>
+              </div>
+            </div>
+
+            <div class="scene" data-scene="travel">
+              <video
+                src="media/sim_travel.mp4"
+                loop
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
+              <div class="scene-tag">
+                <span>MuJoCo · wide</span><span>rails carrying both hands</span>
+              </div>
+            </div>
+
+            <div class="scene diagram" data-scene="loop">
+              <svg
+                viewBox="0 0 700 260"
+                role="img"
+                aria-label="Control loop: observations flow into the actor network, which outputs joint residuals and hold flags into MuJoCo, which returns a new state and reward."
+              >
+                <text class="sv-lab" x="10" y="22">OBSERVATION · 1272</text>
+                <g font-family="monospace" font-size="9.5" fill="var(--text)">
+                  <rect
+                    x="10"
+                    y="32"
+                    width="166"
+                    height="20"
+                    fill="var(--bg)"
+                    stroke="var(--line)"
+                  />
+                  <text x="18" y="46">hand joints + rails · 52</text>
+                  <rect
+                    x="10"
+                    y="56"
+                    width="166"
+                    height="20"
+                    fill="var(--bg)"
+                    stroke="var(--line)"
+                  />
+                  <text x="18" y="70">key positions · 88</text>
+                  <rect
+                    x="10"
+                    y="80"
+                    width="166"
+                    height="20"
+                    fill="var(--accent-soft)"
+                    stroke="var(--accent)"
+                  />
+                  <text x="18" y="94" fill="var(--accent)">
+                    piano roll · 88 x 10
+                  </text>
+                  <rect
+                    x="10"
+                    y="104"
+                    width="166"
+                    height="20"
+                    fill="var(--bg)"
+                    stroke="var(--line)"
+                  />
+                  <text x="18" y="118">key windows · 96</text>
+                  <rect
+                    x="10"
+                    y="128"
+                    width="166"
+                    height="20"
+                    fill="var(--bg)"
+                    stroke="var(--line)"
+                  />
+                  <text x="18" y="142">per-finger targets · 60</text>
+                  <rect
+                    x="10"
+                    y="152"
+                    width="166"
+                    height="20"
+                    fill="var(--bg)"
+                    stroke="var(--line)"
+                  />
+                  <text x="18" y="166">hold state · 30</text>
+                  <rect
+                    x="10"
+                    y="176"
+                    width="166"
+                    height="20"
+                    fill="var(--bg)"
+                    stroke="var(--line)"
+                  />
+                  <text x="18" y="190">upcoming notes · 12</text>
+                  <rect
+                    x="10"
+                    y="200"
+                    width="166"
+                    height="20"
+                    fill="var(--bg)"
+                    stroke="var(--line)"
+                  />
+                  <text x="18" y="214">previous action · 52</text>
+                </g>
+                <line
+                  x1="182"
+                  y1="126"
+                  x2="246"
+                  y2="126"
+                  class="sv-acc flow"
+                  stroke-width="2"
+                />
+                <path d="M246 126 l-7 -4 l0 8 z" class="sv-accf" />
+                <text class="sv-lab-s" x="186" y="118">normalise</text>
+                <rect
+                  x="252"
+                  y="62"
+                  width="132"
+                  height="128"
+                  fill="var(--bg)"
+                  stroke="var(--text)"
+                />
+                <text class="sv-lab" x="264" y="82" fill="var(--text)">
+                  ACTOR
+                </text>
+                <g font-family="monospace" font-size="9.5" fill="var(--muted)">
+                  <text x="264" y="104">1024</text>
+                  <rect
+                    class="glow-a"
+                    x="300"
+                    y="96"
+                    width="70"
+                    height="9"
+                    fill="var(--accent)"
+                  />
+                  <text x="264" y="126">512</text>
+                  <rect
+                    class="glow-b"
+                    x="300"
+                    y="118"
+                    width="46"
+                    height="9"
+                    fill="var(--accent)"
+                  />
+                  <text x="264" y="148">256</text>
+                  <rect
+                    class="glow-c"
+                    x="300"
+                    y="140"
+                    width="28"
+                    height="9"
+                    fill="var(--accent)"
+                  />
+                  <text x="264" y="176">ELU · Gaussian</text>
+                </g>
+                <rect
+                  x="252"
+                  y="204"
+                  width="132"
+                  height="42"
+                  fill="var(--bg)"
+                  stroke="var(--line)"
+                  stroke-dasharray="3 3"
+                />
+                <text class="sv-lab" x="264" y="222">CRITIC to V</text>
+                <text class="sv-lab-s" x="264" y="238">
+                  +11 privileged dims
+                </text>
+                <line
+                  x1="176"
+                  y1="225"
+                  x2="246"
+                  y2="225"
+                  class="sv-line"
+                  stroke-dasharray="3 3"
+                />
+                <path d="M246 225 l-7 -4 l0 8 z" class="sv-mut" />
+                <line
+                  x1="390"
+                  y1="126"
+                  x2="450"
+                  y2="126"
+                  class="sv-acc flow"
+                  stroke-width="2"
+                />
+                <path d="M450 126 l-7 -4 l0 8 z" class="sv-accf" />
+                <text class="sv-lab" x="456" y="22">ACTION · 52</text>
+                <g font-family="monospace" font-size="9.5" fill="var(--text)">
+                  <rect
+                    x="456"
+                    y="76"
+                    width="152"
+                    height="22"
+                    fill="var(--bg)"
+                    stroke="var(--line)"
+                  />
+                  <text x="464" y="91">20 hand actuators x2</text>
+                  <rect
+                    x="456"
+                    y="102"
+                    width="152"
+                    height="22"
+                    fill="var(--bg)"
+                    stroke="var(--line)"
+                  />
+                  <text x="464" y="117">rail residual x2</text>
+                  <rect
+                    x="456"
+                    y="128"
+                    width="152"
+                    height="22"
+                    fill="var(--accent-soft)"
+                    stroke="var(--accent)"
+                  />
+                  <text x="464" y="143" fill="var(--accent)">
+                    10 hold flags
+                  </text>
+                </g>
+                <rect
+                  x="618"
+                  y="76"
+                  width="72"
+                  height="74"
+                  fill="var(--bg)"
+                  stroke="var(--text)"
+                />
+                <text class="sv-lab" x="628" y="100" fill="var(--text)">
+                  MuJoCo
+                </text>
+                <text class="sv-lab-s" x="628" y="116">step</text>
+                <text class="sv-lab-s" x="628" y="130">reward</text>
+                <path
+                  d="M654 154 L654 236 L400 236"
+                  class="sv-line flow"
+                  stroke-width="1.5"
+                  fill="none"
+                />
+                <path d="M400 236 l7 -4 l0 8 z" class="sv-mut" />
+                <text class="sv-lab-s" x="470" y="232">new state + reward</text>
+              </svg>
+              <div class="scene-tag">
+                <span>one control step</span><span>1272 in, 52 out</span>
+              </div>
+            </div>
+
+            <div class="scene diagram" data-scene="rail">
+              <svg
+                viewBox="0 0 700 220"
+                role="img"
+                aria-label="A planned palm position slides along the keyboard while the hand tracks it with a small offset, lifting its fingers whenever the rail travels fast."
+              >
+                <g transform="translate(20,128)">
+                  <rect
+                    x="0"
+                    y="0"
+                    width="660"
+                    height="44"
+                    fill="var(--key)"
+                    stroke="var(--key-edge)"
+                  />
+                  <g stroke="var(--key-edge)" stroke-width=".8">
+                    <line x1="30" y1="0" x2="30" y2="44" />
+                    <line x1="60" y1="0" x2="60" y2="44" />
+                    <line x1="90" y1="0" x2="90" y2="44" />
+                    <line x1="120" y1="0" x2="120" y2="44" />
+                    <line x1="150" y1="0" x2="150" y2="44" />
+                    <line x1="180" y1="0" x2="180" y2="44" />
+                    <line x1="210" y1="0" x2="210" y2="44" />
+                    <line x1="240" y1="0" x2="240" y2="44" />
+                    <line x1="270" y1="0" x2="270" y2="44" />
+                    <line x1="300" y1="0" x2="300" y2="44" />
+                    <line x1="330" y1="0" x2="330" y2="44" />
+                    <line x1="360" y1="0" x2="360" y2="44" />
+                    <line x1="390" y1="0" x2="390" y2="44" />
+                    <line x1="420" y1="0" x2="420" y2="44" />
+                    <line x1="450" y1="0" x2="450" y2="44" />
+                    <line x1="480" y1="0" x2="480" y2="44" />
+                    <line x1="510" y1="0" x2="510" y2="44" />
+                    <line x1="540" y1="0" x2="540" y2="44" />
+                    <line x1="570" y1="0" x2="570" y2="44" />
+                    <line x1="600" y1="0" x2="600" y2="44" />
+                    <line x1="630" y1="0" x2="630" y2="44" />
+                  </g>
+                  <g fill="var(--black-key)">
+                    <rect x="22" y="0" width="16" height="27" />
+                    <rect x="52" y="0" width="16" height="27" />
+                    <rect x="112" y="0" width="16" height="27" />
+                    <rect x="142" y="0" width="16" height="27" />
+                    <rect x="172" y="0" width="16" height="27" />
+                    <rect x="232" y="0" width="16" height="27" />
+                    <rect x="262" y="0" width="16" height="27" />
+                    <rect x="322" y="0" width="16" height="27" />
+                    <rect x="352" y="0" width="16" height="27" />
+                    <rect x="382" y="0" width="16" height="27" />
+                    <rect x="442" y="0" width="16" height="27" />
+                    <rect x="472" y="0" width="16" height="27" />
+                    <rect x="532" y="0" width="16" height="27" />
+                    <rect x="562" y="0" width="16" height="27" />
+                    <rect x="592" y="0" width="16" height="27" />
+                  </g>
+                </g>
+                <g class="rail-plan" transform="translate(20,0)">
+                  <rect
+                    x="60"
+                    y="92"
+                    width="86"
+                    height="30"
+                    fill="none"
+                    stroke="var(--muted)"
+                    stroke-dasharray="4 3"
+                  />
+                  <text class="sv-lab-s" x="60" y="86">planned palm</text>
+                </g>
+                <g class="rail-real" transform="translate(20,0)">
+                  <g class="leap-hand">
+                    <rect
+                      x="64"
+                      y="56"
+                      width="78"
+                      height="40"
+                      rx="7"
+                      fill="var(--text)"
+                      opacity=".88"
+                    />
+                    <g fill="var(--text)">
+                      <rect x="70" y="94" width="9" height="30" rx="4.5" />
+                      <rect x="86" y="94" width="9" height="34" rx="4.5" />
+                      <rect x="102" y="94" width="9" height="32" rx="4.5" />
+                      <rect x="118" y="94" width="9" height="27" rx="4.5" />
+                    </g>
+                    <text class="sv-lab-s" x="64" y="48" fill="var(--accent)">
+                      hand + residual under 5 cm
+                    </text>
+                  </g>
+                </g>
+                <text class="sv-lab-s" x="20" y="200">
+                  rail travelling, fingers curl away from the keys, brushed keys
+                  fall from 101 to 5 per song
+                </text>
+              </svg>
+              <div class="scene-tag">
+                <span>servo setpoint and leap</span
+                ><span>planner drives the rail</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- steps ---------- -->
+        <div class="steps">
+          <section class="step" data-scene="top">
+            <div class="head">
+              <div class="eyebrow">01 · The task</div>
+              <h2>A score, two hands, and nothing else</h2>
+            </div>
+            <div class="stack">
+              <p>
+                The policy is handed a MIDI file and a pair of robot hands. At
+                every control step it sees which of the 88 keys should be
+                sounding now and over the next ten steps, where its own fingers
+                are, and how far each key is currently depressed. It outputs
+                joint targets. If the right keys go down at the right time, it
+                scores.
+              </p>
+              <p>
+                The metric is <strong>F1 over key-steps</strong>. A key that
+                should be sounding and is counts as a hit, a key that sounds
+                when it should not is a false press. This is the same measure
+                RoboPianist and RP1M report, which makes the number comparable,
+                with one caveat noted in the results.
+              </p>
+              <p>
+                The constraint that shaped the whole project:
+                <strong>no pretraining of any kind.</strong> RP1M's pipeline
+                bootstraps from a motion captured or planner generated prior.
+                Here the hands start as a ready pose hovering above the keys,
+                and everything after that, which finger takes which note, when
+                to travel, when to lift, comes out of PPO.
+              </p>
+            </div>
+          </section>
+
+          <section class="step" data-scene="keys">
+            <div class="head">
+              <div class="eyebrow">02 · The instrument</div>
+              <h2>88 hinges with springs in them</h2>
+            </div>
+            <div class="stack">
+              <p>
+                MuJoCo builds a world out of four pieces: a
+                <strong>body</strong> that can move, a
+                <strong>geom</strong> stuck to it that has shape and collides, a
+                <strong>joint</strong> that says how it may move relative to its
+                parent, and a <strong>site</strong>, an invisible marker you can
+                measure from. The piano is 88 copies of the same four line idea.
+              </p>
+            </div>
+            <pre>
+&lt;body name="key_0" pos="0 0 0"&gt;
+  &lt;joint name="joint_0" type="hinge" axis="0 -1 0"
+         range="-0.066 0" stiffness="3" damping="0.1"/&gt;
+  &lt;geom type="box" size="0.07 0.011 0.006" rgba="1 1 1 1"/&gt;
+  &lt;site name="key_site_0" pos="0.07 0 0.006"/&gt;
+&lt;/body&gt;</pre>
+            <div class="stack">
+              <p>
+                Each key is a hinge at the back, a box extending forward, a
+                torsion spring holding it up, a damper, and a travel limit so it
+                stops at the bottom. The site on top is the point the
+                environment measures: how far down the key is, and whether it
+                has crossed the threshold where it sounds.
+              </p>
+            </div>
+          </section>
+
+          <section class="step" data-scene="damper">
+            <div class="head">
+              <div class="eyebrow">02 · Key physics</div>
+              <h2>The damper is not optional</h2>
+            </div>
+            <div class="stack">
+              <p>
+                A spring alone stores energy and gives it all back. Hooke's law
+                says the torque is proportional to displacement and points the
+                other way, and the energy it holds grows with the square of that
+                displacement.
+              </p>
+            </div>
+            <div class="eq">
+              t<sub>spring</sub> = -k (q - q<sub>ref</sub>) &nbsp;&nbsp; U = ½ k
+              (q - q<sub>ref</sub>)²
+              <small>k = 3</small>
+            </div>
+            <div class="stack">
+              <p>
+                A finger presses, does work against the spring, and that work
+                becomes <span class="m">U</span>. Release the finger and the
+                energy has nowhere to go. It sloshes between spring and kinetic
+                energy forever, and the key bounces across the sounding
+                threshold over and over. One note becomes a machine gun burst of
+                note ons.
+              </p>
+              <p>
+                The damper stores nothing. It turns motion into heat with a
+                torque opposing velocity, bleeding
+                <span class="m">b q̇²</span> out of the system every cycle, so
+                the key returns to the top once and stays there.
+              </p>
+            </div>
+            <div class="eq">
+              t<sub>damper</sub> = -b q̇
+              <small>b = 0.1, enough to kill the bounce in one return</small>
+            </div>
+          </section>
+
+          <section class="step" data-scene="finger">
+            <div class="head">
+              <div class="eyebrow">03 · The hands</div>
+              <h2>24 joints, 20 actuators</h2>
+            </div>
+            <div class="stack">
+              <p>
+                Both hands come from MuJoCo Menagerie's Shadow Hand, loaded into
+                the same scene as the piano and bolted to a rail. That is the
+                hand in the panel, rendered from the actual rollout, not a
+                stand-in.
+              </p>
+              <p>
+                The gap between 24 joints and 20 actuators is the interesting
+                part. On the index, middle, ring and little fingers, the last
+                two joints are driven together by a single tendon. You cannot
+                command the fingertip independently of the middle knuckle.
+              </p>
+            </div>
+            <ul class="spec">
+              <li>
+                <b>Wrist</b
+                ><span
+                  >2 joints, 2 actuators. One bends the hand up and down, one
+                  tilts it side to side.</span
+                >
+              </li>
+              <li>
+                <b>Index / mid / ring</b
+                ><span
+                  >4 joints, 3 actuators each. Spread sideways, curl at the
+                  knuckle, and one tendon driving the last two joints
+                  together.</span
+                >
+              </li>
+              <li>
+                <b>Little finger</b
+                ><span
+                  >5 joints, 4 actuators. Same as above plus a palm joint that
+                  lets the outer edge of the hand cup inward.</span
+                >
+              </li>
+              <li>
+                <b>Thumb</b
+                ><span
+                  >5 joints, 5 actuators. Two at the base act as a small wrist,
+                  three bend it, none coupled.</span
+                >
+              </li>
+              <li>
+                <b>Rail</b
+                ><span
+                  >1 prismatic joint per hand, so the hand can travel the
+                  keyboard. 25 joints and 21 actuators per hand in total.</span
+                >
+              </li>
+            </ul>
+          </section>
+
+          <section class="step" data-scene="tendon">
+            <div class="head">
+              <div class="eyebrow">03 · Coupling</div>
+              <h2>One tendon, two joints</h2>
+            </div>
+            <div class="stack">
+              <p>
+                This is not a modelling shortcut, it copies your hand. Try
+                bending only the tip of your index finger while keeping the
+                middle joint straight. It is impossible, unless you hold the
+                finger with your other hand.
+              </p>
+              <p>
+                The practical consequence is that a fingertip cannot be placed
+                freely. Asking for a specific tip height also decides the middle
+                knuckle, which is why black keys, which sit higher and further
+                back, are much harder for the short fingers than white keys are.
+              </p>
+            </div>
+          </section>
+
+          <section class="step" data-scene="travel">
+            <div class="head">
+              <div class="eyebrow">03 · Reach</div>
+              <h2>The rail is what makes 88 keys tractable</h2>
+            </div>
+            <div class="stack">
+              <p>
+                A fixed base Shadow Hand covers maybe two octaves. Sliding the
+                whole hand converts "reach an unreachable key" into "be in the
+                right place when the note arrives", which is a planning problem
+                rather than a kinematics one.
+              </p>
+              <p>
+                It also creates the failure mode that cost the most score for
+                the longest time. A hand in motion drags its fingers across
+                every key it passes, and each one of those is a false press.
+              </p>
+            </div>
+          </section>
+
+          <section class="step" data-scene="loop">
+            <div class="head">
+              <div class="eyebrow">04 · Observation and action</div>
+              <h2>1272 numbers in, 52 out</h2>
+            </div>
+            <div class="stack">
+              <p>
+                The actor sees the state of both hands, the state of every key,
+                and what the score is about to ask for. Everything is normalised
+                by a running mean and standard deviation before it hits the
+                network, <span class="m">(x-μ)/(σ+0.01)</span>, so raw radians,
+                metres and booleans arrive on a comparable scale instead of
+                letting the 88 dimensional key block dominate.
+              </p>
+              <p>
+                The 20 hand outputs are not absolute joint positions. Each is a
+                number in <span class="m">[-1, 1]</span>, scaled by 0.8 rad and
+                <em>added on top of the ready pose</em>, so an all zero action
+                leaves the hand hovering over the keys instead of collapsing.
+                That one choice is why exploration from scratch starts in a sane
+                place.
+              </p>
+              <p>
+                The rail is not driven directly either. A scripted servo moves
+                the hand to wherever the fingering plan says the palm should be,
+                and the policy adds a residual of at most 5 cm on top. The
+                policy is responsible for the fingers, the plan is responsible
+                for the geography.
+              </p>
+              <p>
+                The ten <strong>hold flags</strong> replace the sustain pedal.
+                If a finger's hold output exceeds 0.5, the last key it struck
+                keeps ringing after it lifts. One flag per finger rather than
+                one global pedal means the policy can release one note while
+                sustaining another, and if it holds a wrong note, it still pays
+                the false press penalty.
+              </p>
+              <p>
+                The critic gets the same 1272 dimensions plus the contact force
+                on each of the ten fingertips and a hand versus hand collision
+                flag. Its entire job is to predict incoming reward and it is
+                thrown away at deployment, so it is free to use information a
+                real robot could never measure. Cleaner value estimates mean
+                lower variance advantages, which means less noisy actor updates,
+                and none of it leaks into the policy.
+              </p>
+            </div>
+          </section>
+
+          <section class="step" data-scene="loop">
+            <div class="head">
+              <div class="eyebrow">05 · The forward pass</div>
+              <h2>What happens in one step, start to finish</h2>
+            </div>
+            <div class="stack">
+              <p>
+                Everything starts from one MuJoCo state in one environment. Two
+                things get read off it. The first is the observation the policy
+                is allowed to see, built by <span class="m">_get_obs_ego</span>:
+                the joints, the rails, all 88 key positions, the piano roll, the
+                12 key windows around each palm, the upcoming notes, the pedal,
+                and the previous action. The second is
+                <span class="m">critic_extras</span>, which is the fingertip
+                contact forces and the hand versus hand collision flag. That
+                second block never touches the actor.
+              </p>
+              <p>
+                From there the two networks split. The actor gets the policy
+                group on its own. The critic gets the policy group and the
+                privileged group concatenated together, so it runs on a slightly
+                wider vector than the actor does. Each network has its own
+                normalizer, and each one subtracts its own running mean and
+                divides by its own running standard deviation. They are separate
+                normalizers because they are seeing different vectors, so the
+                statistics are not the same.
+              </p>
+              <p>
+                Then it is just a stack of linear layers with ELU in between.
+                The actor goes down to a vector of means, one mean per action.
+                The critic goes down to a single number, which is
+                <span class="m">V(s)</span>, its guess at how much reward is
+                still coming from this state.
+              </p>
+              <p>
+                The actor's output is not the action yet. It is the mean of a
+                Gaussian. There is a separate learned standard deviation, one
+                per action dimension, that is not a function of the observation
+                at all, it is just parameters. To get an action you draw from a
+                standard normal, scale each number by its std, and add its mean.
+                That is the whole sampling step. You also keep
+                <span class="m">log π(a|s)</span> for that exact sample, because
+                the update later needs to know how likely the old policy thought
+                this action was.
+              </p>
+              <p>
+                The action goes into the env as a residual on the ready pose,
+                which becomes the actuator targets, and MuJoCo runs ten physics
+                substeps per control step. Out comes a reward, a done flag and a
+                timeout flag. Every one of those pieces gets written into
+                rollout storage as a single row. Then the next MuJoCo state
+                comes back around to the top, and it repeats for 32 steps across
+                all 1024 environments before anything is learned from.
+              </p>
+            </div>
+            <pre class="flowchart">
+                         MuJoCo state (one env)
+                                 │
+                 ┌───────────────┴────────────────┐
+                 ▼                                ▼
+        _get_obs_ego (1175)             critic_extras (11)
+        joints, rails, 88 keys,          fingertip forces,
+        piano roll, 12-key windows,      hand-vs-hand flag
+        upcoming notes, pedal, prev act
+                 │                                │
+                 ├──────────────┐                 │
+                 ▼              ▼                 ▼
+          "policy" group     concat ["policy", "critic_priv"] (1186)
+                 │                       │
+                 ▼                       ▼
+     actor normalizer (x-μ)/σ    critic normalizer (x-μ)/σ
+                 │                       │
+                 ▼                       ▼
+         1175 → 512 → ELU        1186 → 512 → ELU
+              → 256 → ELU             → 256 → ELU
+              → 128 → ELU             → 128 → ELU
+              → 43                    → 1
+                 │                       │
+                 ▼                       ▼
+          mean μ (43)               V(s)  one number
+                 │                       │
+    learned std σ (43) ──┐               │
+                 ▼       │               │
+        Normal(μ, σ).sample()            │
+                 │                       │
+                 ▼                       │
+          action a (43)                  │
+                 │                       │
+                 ├── log π(a|s) ─────────┤
+                 │                       │
+                 ▼                       ▼
+     env.step(a): residual on        rollout storage, one row:
+     ready pose → ctrl → 10          obs, a, log π(a|s), V(s), μ, σ
+     physics substeps                          ▲
+                 │                             │
+                 ▼                             │
+       reward r, done, timeout ────────────────┘
+                 │
+                 ▼
+       next MuJoCo state  (loop back to top)</pre>
+            <p
+              style="
+                font-family: var(--mono);
+                font-size: 0.72rem;
+                color: var(--muted);
+                line-height: 1.5;
+              "
+            >
+              These are the dimensions of the pedal era network, 1175
+              observations and 43 actions into a 512-256-128 MLP. The shape of
+              the loop never changed. By v15 the observation had grown to 1272,
+              the action to 52 because the pedal became ten per finger hold
+              flags, and the hidden layers to 1024-512-256.
+            </p>
+          </section>
+
+          <section class="step" data-scene="rail">
+            <div class="head">
+              <div class="eyebrow">06 · Fingering</div>
+              <h2>Deciding which finger takes which note</h2>
+            </div>
+            <div class="stack">
+              <p>
+                Greedy, per chord fingering assignment kept producing travel the
+                hands could not execute. A finger would be handed a note 16 cm
+                away 0.1 s before its onset. The fix was to solve the whole song
+                at once, a Viterbi pass over palm positions that scores every
+                assignment against palm travel, finger switching, minimum hand
+                separation, and a hard per finger per key reachability mask
+                measured in the sim.
+              </p>
+              <p>
+                The planner's output does two things. It drives the rail servo's
+                setpoint, and it tells the reward which finger was supposed to
+                play each note.
+              </p>
+              <p>
+                The leap curriculum handles the dragging problem. Fingers are
+                lifted mechanically whenever rail speed exceeds 0.10 m/s, then
+                that scaffold decays to zero over 2000 steps and becomes a
+                penalty instead, so the policy keeps the behaviour after the
+                help is withdrawn. Brushed keys dropped from 101 per song to 5.
+              </p>
+            </div>
+          </section>
+
+          <section class="step" data-scene="keys">
+            <div class="head">
+              <div class="eyebrow">07 · Reward</div>
+              <h2>Six terms, and one that decides whether anything works</h2>
+            </div>
+            <div class="stack">
+              <p>
+                The composite reward follows the RoboPianist recipe. Key presses
+                are scored through a sigmoid around the sounding threshold
+                rather than a hard boolean, so there is a gradient to climb
+                before the key actually sounds.
+              </p>
+            </div>
+            <div class="eq">
+              r = 2.0 hit - 1.0 false + 1.0 fingering + 2.0 onset + 0.2 hover -
+              0.3 jerk - 0.0005 energy
+              <small>weights as trained</small>
+            </div>
+            <div class="stack">
+              <p>
+                False presses are counted per intended note, not averaged over
+                all 87 non goal keys. That denominator matters more than it
+                looks. Averaging dilutes a wrong note to 1/87 of a unit and
+                precision rots quietly. Dividing by the number of goal keys
+                instead makes one misclick cost roughly what one hit earns.
+              </p>
+              <p>
+                The <strong>fingering</strong> term is the one the task does not
+                work without. For every finger assigned a note this step, it
+                rewards closing the distance from fingertip to the key's target
+                point, through a Gaussian tolerance kernel. RoboPianist's
+                ablation has F1 pinned at 0 without it, and the same is true
+                here. A 50 DoF system exploring from key press reward alone
+                never finds its first note.
+              </p>
+              <p>
+                Its falloff width was a real bug. At a 25x margin the term paid
+                0.996 for a fingertip hovering 2 cm above the key, close enough
+                to collect almost full shaping reward, with nothing pulling it
+                the last 2 cm down. Little fingers hovered over key 28 for an
+                entire run without ever pressing it.
+              </p>
+            </div>
+            <ul class="spec">
+              <li>
+                <b>Press discovery</b
+                ><span
+                  >The false press penalty starts at 0.25 and energy at 0, and
+                  only ramps up once recall clears a gate. Punishing wrong notes
+                  before the policy can play any note teaches it to play
+                  nothing.</span
+                >
+              </li>
+              <li>
+                <b>Adaptive keys</b
+                ><span
+                  >Per key recall is tracked with an EMA, and a mastered key
+                  keeps only 10% of its weight, so the budget shifts onto the
+                  keys still being missed.</span
+                >
+              </li>
+              <li>
+                <b>Leap</b
+                ><span
+                  >Fingers lifted while the rail travels, annealed into a
+                  penalty over 2000 steps.</span
+                >
+              </li>
+              <li>
+                <b>Exploration cap</b
+                ><span
+                  >The Gaussian std is clamped to a decaying ceiling, 0.5 down
+                  to 0.15. Left free it drifted up and the greedy policy scored
+                  above the one being trained.</span
+                >
+              </li>
+            </ul>
+          </section>
+
+          <section class="step" data-scene="loop">
+            <div class="head">
+              <div class="eyebrow">08 · The update</div>
+              <h2>GAE, then five epochs over the same 32 steps</h2>
+            </div>
+            <div class="stack">
+              <p>
+                After 32 steps the rollout buffer holds, for every step, the
+                value the critic predicted, the reward that actually arrived,
+                and the done flag. One more critic call gets the value of the
+                state after the last step, because you need something to
+                bootstrap from at the end of a truncated rollout.
+              </p>
+              <p>
+                Then it walks backward through those 32 steps computing the
+                surprise at each one. The surprise is what I got this step, plus
+                what the critic now thinks the next state is worth, minus what
+                the critic thought this state was worth. The advantage is that
+                surprise plus a discounted share of the advantage that came
+                after it, which is why it has to run backward. The return is the
+                advantage plus the value that was already predicted.
+              </p>
+            </div>
+            <div class="eq">
+              δ<sub>t</sub> = r<sub>t</sub> + 0.99 V(s<sub>t+1</sub>) -
+              V(s<sub>t</sub>)<br />
+              A<sub>t</sub> = δ<sub>t</sub> + 0.99 · 0.95 · A<sub>t+1</sub
+              ><br />
+              R<sub>t</sub> = A<sub>t</sub> + V(s<sub>t</sub>)
+              <small
+                >γ = 0.99, λ = 0.95, walked backward over the 32 stored
+                steps</small
+              >
+            </div>
+            <div class="stack">
+              <p>
+                The advantages get normalized over the whole batch, so the size
+                of a gradient step does not depend on how big the rewards happen
+                to be at this point in training. Then the same data is reused
+                five times, in four minibatches of 512 each.
+              </p>
+              <p>
+                Inside each minibatch the actor runs forward again on the stored
+                observations and produces a new mean and std, which gives a new
+                log probability for the action that was already taken. The ratio
+                between the new log probability and the old one is how much the
+                policy has moved on that specific action. Multiply the advantage
+                by the clipped ratio, flip the sign because the optimizer
+                minimizes, and that is the policy loss. The entropy bonus,
+                weighted at 0.001, pushes back against the std collapsing too
+                early.
+              </p>
+              <p>
+                The critic runs forward on the same observations and its loss is
+                just the squared error between the value it now predicts and the
+                return computed earlier, in the clipped variant so a single
+                update cannot move a value estimate too far.
+              </p>
+              <p>
+                Both losses get summed and handed to one Adam optimizer that
+                owns the actor and critic parameters together. Gradients are
+                clipped at norm 0.5, and the learning rate is adjusted up or
+                down based on the KL divergence actually measured between the
+                old and new policy, targeting 0.01. Too much drift and the rate
+                drops, too little and it rises.
+              </p>
+            </div>
+            <pre class="flowchart">
+      stored V(s_t), r_t, done_t, and V(s_last) from one more critic call
+                                 │
+                                 ▼
+                  GAE, walking backward over the 32 steps
+                  δ_t = r_t + 0.99·V(s_t+1) − V(s_t)
+                  A_t = δ_t + 0.99·0.95·A_t+1
+                  R_t = A_t + V(s_t)
+                                 │
+              ┌──────────────────┴──────────────────┐
+              ▼                                     ▼
+      advantages A_t                         returns R_t
+      normalized over the batch                     │
+              │                                     │
+   5 epochs × 4 minibatches of 512:                 │
+              │                                     │
+              ▼                                     ▼
+  actor forward on stored obs         critic forward on stored obs
+  new μ, σ → new log π(a|s)           new V(s)
+              │                                     │
+              ▼                                     ▼
+  ratio = exp(new log π − old log π)   value loss = (V(s) − R_t)²
+  policy loss = −A_t · clip(ratio)           (clipped variant)
+  entropy bonus = 0.001 · H(σ)                      │
+              │                                     │
+              └──────────── sum ────────────────────┘
+                                 │
+                                 ▼
+             one Adam optimizer over actor + critic params
+             grad clip 0.5, LR adjusted by measured KL</pre>
+            <p
+              style="
+                font-family: var(--mono);
+                font-size: 0.72rem;
+                color: var(--muted);
+                line-height: 1.5;
+              "
+            >
+              1024 parallel environments by 32 steps per rollout, clip 0.2,
+              adaptive learning rate targeting KL 0.01. The entropy coefficient
+              was the second largest single lever in the project. At 0.006 the
+              action std drifted from 0.5 to 1.47 and F1 sat flat from iteration
+              800 onward.
+            </p>
+          </section>
+
+          <section class="step" data-scene="top">
+            <div class="head">
+              <div class="eyebrow">09 · What is still missing</div>
+              <h2>Recall 0.715 against precision 0.914</h2>
+            </div>
+            <div class="stack">
+              <p>
+                That split says the remaining loss is almost entirely notes that
+                never get played, not wrong ones. Three causes, measured:
+              </p>
+            </div>
+            <ul class="spec">
+              <li>
+                <b>Black key depth</b
+                ><span
+                  >The hands are calibrated to the white key press line. The
+                  little finger and thumb cannot reach far enough back to sound
+                  keys 28, 40 and 54 reliably. Moving the hand base along x does
+                  not fix it, the geometry does.</span
+                >
+              </li>
+              <li>
+                <b>Dead thumbs</b
+                ><span
+                  >Per finger probing through the actuators found the thumbs
+                  sounding no key at all in the ready pose. v15 excludes them
+                  from assignment, which is a workaround, not a solution.</span
+                >
+              </li>
+              <li>
+                <b>Same finger octaves</b
+                ><span
+                  >Where the score asks one hand for 44 and 56 in quick
+                  succession, the servo leaves at the onset of the first and the
+                  second is never struck.</span
+                >
+              </li>
+            </ul>
+          </section>
+        </div>
+      </div>
+
+      <!-- ===================== RESULTS ===================== -->
+      <section class="band">
+        <div class="col reveal">
+          <div class="head">
+            <div class="eyebrow">10 · Results</div>
+            <h2>0.673 to 0.803, one bottleneck at a time</h2>
+          </div>
+          <p>
+            Every number below is a deterministic whole song rollout of the full
+            88 key piano on the real song. Not a folded keyboard, not an
+            excerpt.
+          </p>
+        </div>
+
+        <figure class="reveal" style="margin-block: 2.2em">
+          <div class="figbox">
+            <div class="figtitle">F1 by run · deterministic, whole song</div>
+            <svg
+              class="chart"
+              viewBox="0 0 700 300"
+              role="img"
+              aria-label="F1 by run: v5 0.673, v8 0.678, v10 0.750, v11 0.702, v12 0.776, v15 0.803."
+            >
+              <line
+                x1="56"
+                y1="40"
+                x2="676"
+                y2="40"
+                class="sv-line"
+                stroke-dasharray="2 4"
+              />
+              <text class="sv-lab-s" x="24" y="44">0.85</text>
+              <line
+                x1="56"
+                y1="104"
+                x2="676"
+                y2="104"
+                class="sv-line"
+                stroke-dasharray="2 4"
+              />
+              <text class="sv-lab-s" x="24" y="108">0.80</text>
+              <line
+                x1="56"
+                y1="168"
+                x2="676"
+                y2="168"
+                class="sv-line"
+                stroke-dasharray="2 4"
+              />
+              <text class="sv-lab-s" x="24" y="172">0.75</text>
+              <line
+                x1="56"
+                y1="232"
+                x2="676"
+                y2="232"
+                class="sv-line"
+                stroke-dasharray="2 4"
+              />
+              <text class="sv-lab-s" x="24" y="236">0.70</text>
+              <line
+                x1="56"
+                y1="262"
+                x2="676"
+                y2="262"
+                class="sv-ink"
+                stroke-width="1"
+              />
+              <text class="sv-lab-s" x="24" y="266">0.65</text>
+              <rect
+                class="bar"
+                x="76"
+                y="232.6"
+                width="66"
+                height="29.4"
+                fill="var(--muted)"
+                opacity=".4"
+              />
+              <text class="sv-lab-s" x="76" y="226">0.673</text>
+              <text class="sv-lab" x="76" y="282">v5</text>
+              <rect
+                class="bar"
+                x="176"
+                y="226.2"
+                width="66"
+                height="35.8"
+                fill="var(--muted)"
+                opacity=".4"
+              />
+              <text class="sv-lab-s" x="176" y="220">0.678</text>
+              <text class="sv-lab" x="176" y="282">v8</text>
+              <rect
+                class="bar"
+                x="276"
+                y="134"
+                width="66"
+                height="128"
+                fill="var(--muted)"
+                opacity=".55"
+              />
+              <text class="sv-lab-s" x="276" y="128">0.750</text>
+              <text class="sv-lab" x="276" y="282">v10</text>
+              <rect
+                class="bar"
+                x="376"
+                y="195.4"
+                width="66"
+                height="66.6"
+                fill="var(--muted)"
+                opacity=".3"
+              />
+              <text class="sv-lab-s" x="376" y="189">0.702</text>
+              <text class="sv-lab" x="376" y="282">v11</text>
+              <rect
+                class="bar"
+                x="476"
+                y="100.7"
+                width="66"
+                height="161.3"
+                fill="var(--muted)"
+                opacity=".55"
+              />
+              <text class="sv-lab-s" x="476" y="94">0.776</text>
+              <text class="sv-lab" x="476" y="282">v12</text>
+              <rect
+                class="bar"
+                x="576"
+                y="66.2"
+                width="66"
+                height="195.8"
+                fill="var(--accent)"
+              />
+              <text class="sv-lab-s" x="576" y="60" fill="var(--accent)">
+                0.803
+              </text>
+              <text class="sv-lab" x="576" y="282" fill="var(--accent)">
+                v15
+              </text>
+              <g class="sv-lab-s">
+                <text x="276" y="298">4-step roll</text>
+                <text x="376" y="298">pedal span down</text>
+                <text x="476" y="298">leap curriculum</text>
+                <text x="576" y="298" fill="var(--accent)">reach mask</text>
+              </g>
+            </svg>
+          </div>
+          <figcaption>
+            v11 is included deliberately. Narrowing the pedal goal span looked
+            principled and cost 0.048 F1. Most of the ideas that sounded good
+            did not survive measurement.
+          </figcaption>
+        </figure>
+
+        <div class="col reveal">
+          <div class="tablewrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Run</th>
+                  <th class="n">F1</th>
+                  <th class="n">Recall</th>
+                  <th class="n">Prec.</th>
+                  <th>What changed</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>v5</td>
+                  <td class="n">0.673</td>
+                  <td class="n">0.548</td>
+                  <td class="n">n/a</td>
+                  <td>first full keyboard baseline</td>
+                </tr>
+                <tr>
+                  <td>v10</td>
+                  <td class="n">0.750</td>
+                  <td class="n">0.662</td>
+                  <td class="n">0.864</td>
+                  <td>chords rolled over 4 steps instead of 2</td>
+                </tr>
+                <tr>
+                  <td>v11</td>
+                  <td class="n">0.702</td>
+                  <td class="n">n/a</td>
+                  <td class="n">n/a</td>
+                  <td>pedal goal span narrowed, regression</td>
+                </tr>
+                <tr>
+                  <td>v12</td>
+                  <td class="n">0.776</td>
+                  <td class="n">n/a</td>
+                  <td class="n">0.97</td>
+                  <td>leap curriculum, real pedal</td>
+                </tr>
+                <tr class="best">
+                  <td>v15</td>
+                  <td class="n">0.803</td>
+                  <td class="n">0.715</td>
+                  <td class="n">0.914</td>
+                  <td>reach mask, thumbs excluded, 1024-512-256</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note">
+            <b>The honest comparison is v12, not v15.</b> The per finger hold is
+            a sim affordance more lenient than a real sustain pedal. v12's 0.776
+            was achieved with an actual pedal, which makes it the cleaner number
+            to hold against RoboPianist and RP1M, and RP1M reaches its scores
+            with a demonstration bootstrapped stage this policy never had.
+          </div>
+        </div>
+
+        <figure class="reveal" style="margin-block: 2.4em">
+          <div class="figtitle">Same song, two policies</div>
+          <div class="duo">
+            <figure>
+              <div class="frame">
+                <video
+                  src="media/v10_clip.mp4"
+                  autoplay
+                  loop
+                  muted
+                  playsinline
+                ></video>
+              </div>
+              <figcaption>
+                v10, F1 0.750. Fingers drag across keys during travel, and the
+                rolled octave in the right hand is lost outright.
+              </figcaption>
+            </figure>
+            <figure>
+              <div class="frame">
+                <video
+                  src="media/v15_clip.mp4"
+                  autoplay
+                  loop
+                  muted
+                  playsinline
+                ></video>
+              </div>
+              <figcaption>
+                v15, F1 0.803. Fingers lift off between positions, and the
+                planner keeps each hand near the keys it owes.
+              </figcaption>
+            </figure>
+          </div>
+        </figure>
+      </section>
+
+      <!-- ===================== LISTEN ===================== -->
+      <section class="band">
+        <div class="col reveal">
+          <div class="head">
+            <div class="eyebrow">11 · Listen</div>
+            <h2>The full 64 seconds</h2>
+          </div>
+          <p>
+            Audio is synthesised from the MIDI the policy actually produced in
+            simulation, the key press events, not the original file. Everything
+            it fails to play is simply absent.
+          </p>
+        </div>
+        <figure class="reveal" style="margin-block: 2em">
+          <div class="frame">
+            <video
+              src="media/v15_front.mp4"
+              poster="media/poster.png"
+              controls
+              preload="metadata"
+              playsinline
+            ></video>
+          </div>
+          <figcaption>
+            Front view, v15 at iteration 5346. Watch the fingers curl upward
+            each time a hand slides.
+          </figcaption>
+        </figure>
+        <figure class="reveal" style="margin-block: 2em">
+          <div class="frame">
+            <video
+              src="media/v15_main.mp4"
+              controls
+              preload="metadata"
+              playsinline
+            ></video>
+          </div>
+          <figcaption>
+            Wide view. The rails carry both hands across the full 88 keys.
+          </figcaption>
+        </figure>
+      </section>
+
+      <!-- ===================== CLOSE ===================== -->
+      <section class="band">
+        <div class="col reveal">
+          <div class="head">
+            <div class="eyebrow">12 · What the project taught</div>
+            <h2>Most of the leverage was not in the learning algorithm</h2>
+          </div>
+          <div class="stack">
+            <p>
+              Across fifteen runs, PPO's hyperparameters moved the score once,
+              through the entropy coefficient. Everything else that mattered was
+              a statement about the task: how a chord is spread across time,
+              whether a finger can physically reach a key, what the reward
+              counts as a mistake, where the hand should be before the note
+              arrives.
+            </p>
+            <p>
+              The failures were informative in the same direction. Stickiness
+              weighting, hand base placement, larger networks, contact stiffness
+              tuning, six measured dead ends. The thing that finally moved
+              recall was measuring, finger by finger and key by key, what the
+              hardware could actually do, and then refusing to let the planner
+              ask for anything else.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="col">
+        MuJoCo · rsl_rl PPO · Shadow Hand from MuJoCo Menagerie · trained on a
+        single A100 · no demonstrations, no behaviour cloning, no pretrained
+        weights
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        var reduce =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var scenes = {};
+        document.querySelectorAll(".scene").forEach(function (el) {
+          var k = el.getAttribute("data-scene");
+          (scenes[k] = scenes[k] || []).push(el);
+        });
+
+        function setScene(key) {
+          Object.keys(scenes).forEach(function (k) {
+            scenes[k].forEach(function (el) {
+              var on = k === key;
+              el.classList.toggle("active", on);
+              var v = el.querySelector("video");
+              if (!v) return;
+              if (on) {
+                var p = v.play();
+                if (p && p.catch) p.catch(function () {});
+              } else {
+                v.pause();
+              }
+            });
+          });
+        }
+
+        // first scene visible immediately so the panel is never blank
+        var firstStep = document.querySelector(".step[data-scene]");
+        setScene(firstStep ? firstStep.getAttribute("data-scene") : "top");
+
+        if ("IntersectionObserver" in window) {
+          var stepObs = new IntersectionObserver(
+            function (entries) {
+              // pick the entry closest to the middle of the viewport
+              var best = null,
+                bestD = Infinity;
+              entries.forEach(function (e) {
+                if (!e.isIntersecting) return;
+                var r = e.target.getBoundingClientRect();
+                var d = Math.abs(r.top + r.height / 2 - window.innerHeight / 2);
+                if (d < bestD) {
+                  bestD = d;
+                  best = e.target;
+                }
+              });
+              if (best) setScene(best.getAttribute("data-scene"));
+            },
+            { rootMargin: "-35% 0px -35% 0px", threshold: 0 },
+          );
+          document.querySelectorAll(".step[data-scene]").forEach(function (s) {
+            stepObs.observe(s);
+          });
+
+          if (!reduce) {
+            document.documentElement.classList.add("js-reveal");
+            var io = new IntersectionObserver(
+              function (entries) {
+                entries.forEach(function (e) {
+                  if (e.isIntersecting) {
+                    e.target.classList.add("in");
+                    io.unobserve(e.target);
+                  }
+                });
+              },
+              { rootMargin: "0px 0px -12% 0px", threshold: 0.08 },
+            );
+            document.querySelectorAll(".reveal, .chart").forEach(function (t) {
+              if (t.getBoundingClientRect().top < window.innerHeight)
+                t.classList.add("in");
+              else io.observe(t);
+            });
+          }
+        } else {
+          // no observer: show every scene stacked rather than a blank panel
+          document.querySelectorAll(".scene").forEach(function (el) {
+            el.classList.add("active");
+            el.style.position = "relative";
+          });
+          document.getElementById("panel").style.height = "auto";
+        }
+
+        var bar = document.getElementById("progbar");
+        function tick() {
+          var h = document.documentElement.scrollHeight - window.innerHeight;
+          bar.style.width =
+            (h > 0
+              ? Math.min(1, Math.max(0, window.scrollY / h)) * 100
+              : 0
+            ).toFixed(2) + "%";
+        }
+        window.addEventListener("scroll", tick, { passive: true });
+        window.addEventListener("resize", tick);
+        tick();
+
+        var longs = document.querySelectorAll("video[controls]");
+        longs.forEach(function (v) {
+          v.addEventListener("play", function () {
+            longs.forEach(function (o) {
+              if (o !== v) o.pause();
+            });
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
