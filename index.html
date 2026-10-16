@@ -295,6 +295,36 @@
         height: auto;
         max-height: 100%;
       }
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        width: 100%;
+        height: 100%;
+        background: var(--line);
+      }
+      .half {
+        position: relative;
+        overflow: hidden;
+        background: var(--surface);
+      }
+      .half video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .halflabel {
+        position: absolute;
+        left: 8px;
+        top: 8px;
+        font-family: var(--mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.06em;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--line);
+        padding: 0.15em 0.5em;
+      }
       .scene-tag {
         position: absolute;
         left: 0;
@@ -970,360 +1000,47 @@
         <div class="panel-col">
           <div class="panel" id="panel">
             <div class="scene" data-scene="top">
-              <video
-                src="media/sim_top.mp4"
-                loop
-                muted
-                playsinline
-                preload="metadata"
-              ></video>
-              <div class="scene-tag">
-                <span>MuJoCo · top camera</span><span>v15 rollout</span>
-              </div>
+              <video src="media/sim_top.mp4" loop muted playsinline preload="metadata"></video>
+              <div class="scene-tag"><span>MuJoCo · whole keyboard</span><span>v15 policy rollout</span></div>
             </div>
-
             <div class="scene" data-scene="keys">
-              <video
-                src="media/sim_keys.mp4"
-                loop
-                muted
-                playsinline
-                preload="metadata"
-              ></video>
-              <div class="scene-tag">
-                <span>MuJoCo · key bed</span><span>88 hinge joints</span>
-              </div>
+              <video src="media/demo_press_one.mp4" loop muted playsinline preload="metadata"></video>
+              <div class="scene-tag"><span>MuJoCo · one finger, one key</span><span>lit = sounding</span></div>
             </div>
-
-            <div class="scene diagram" data-scene="damper">
-              <svg
-                viewBox="0 0 640 230"
-                role="img"
-                aria-label="Two piano keys pressed identically: the damped one settles after a single note on, the undamped one bounces and retriggers."
-              >
-                <text class="sv-lab" x="8" y="16">damping = 0.1 · settles</text>
-                <text class="sv-lab" x="336" y="16">
-                  damping = 0 · chatters
-                </text>
-                <g>
-                  <g class="k-finger">
-                    <rect
-                      x="112"
-                      y="40"
-                      width="16"
-                      height="44"
-                      rx="7"
-                      fill="var(--text)"
-                      opacity=".8"
-                    />
-                    <rect
-                      x="114"
-                      y="78"
-                      width="12"
-                      height="16"
-                      rx="5"
-                      fill="var(--text)"
-                    />
-                  </g>
-                  <line
-                    x1="40"
-                    y1="128"
-                    x2="280"
-                    y2="128"
-                    class="sv-line"
-                    stroke-dasharray="3 4"
-                  />
-                  <text class="sv-lab-s" x="40" y="124">sounds below here</text>
-                  <circle cx="44" cy="110" r="3.5" class="sv-mut" />
-                  <g class="hinge k-damped">
-                    <rect
-                      x="44"
-                      y="102"
-                      width="192"
-                      height="15"
-                      rx="2"
-                      fill="var(--key)"
-                      stroke="var(--key-edge)"
-                    />
-                  </g>
-                  <path
-                    d="M58 150 l8 -8 l-14 -6 l16 -7 l-14 -6 l14 -6"
-                    class="sv-line"
-                    stroke-width="1.4"
-                  />
-                  <text class="sv-lab-s" x="78" y="146">k = 3</text>
-                  <g transform="translate(78,160)">
-                    <rect
-                      x="0"
-                      y="0"
-                      width="18"
-                      height="12"
-                      class="sv-line"
-                      stroke-width="1.2"
-                    />
-                    <line
-                      x1="9"
-                      y1="-6"
-                      x2="9"
-                      y2="4"
-                      class="sv-line"
-                      stroke-width="1.2"
-                    />
-                    <text class="sv-lab-s" x="26" y="10">b = 0.1</text>
-                  </g>
-                  <g class="k-sound">
-                    <rect
-                      x="44"
-                      y="196"
-                      width="80"
-                      height="16"
-                      fill="var(--accent-soft)"
-                    />
-                    <text
-                      x="52"
-                      y="208"
-                      font-family="monospace"
-                      font-size="9.5"
-                      fill="var(--accent)"
-                    >
-                      note on x1
-                    </text>
-                  </g>
-                </g>
-                <line
-                  x1="306"
-                  y1="24"
-                  x2="306"
-                  y2="212"
-                  class="sv-line"
-                  stroke-dasharray="2 5"
-                />
-                <g transform="translate(332,0)">
-                  <g class="k-finger">
-                    <rect
-                      x="112"
-                      y="40"
-                      width="16"
-                      height="44"
-                      rx="7"
-                      fill="var(--text)"
-                      opacity=".8"
-                    />
-                    <rect
-                      x="114"
-                      y="78"
-                      width="12"
-                      height="16"
-                      rx="5"
-                      fill="var(--text)"
-                    />
-                  </g>
-                  <line
-                    x1="12"
-                    y1="128"
-                    x2="252"
-                    y2="128"
-                    class="sv-line"
-                    stroke-dasharray="3 4"
-                  />
-                  <circle cx="16" cy="110" r="3.5" class="sv-mut" />
-                  <g class="hinge k-free">
-                    <rect
-                      x="16"
-                      y="102"
-                      width="192"
-                      height="15"
-                      rx="2"
-                      fill="var(--key)"
-                      stroke="var(--key-edge)"
-                    />
-                  </g>
-                  <path
-                    d="M30 150 l8 -8 l-14 -6 l16 -7 l-14 -6 l14 -6"
-                    class="sv-line"
-                    stroke-width="1.4"
-                  />
-                  <text class="sv-lab-s" x="50" y="146">k = 3</text>
-                  <text class="sv-lab-s" x="50" y="170">no damper</text>
-                  <g class="k-chatter">
-                    <rect
-                      x="16"
-                      y="196"
-                      width="112"
-                      height="16"
-                      fill="var(--accent-soft)"
-                    />
-                    <text
-                      x="24"
-                      y="208"
-                      font-family="monospace"
-                      font-size="9.5"
-                      fill="var(--accent)"
-                    >
-                      note on x7 …
-                    </text>
-                  </g>
-                </g>
-              </svg>
-              <div class="scene-tag">
-                <span>spring and damper</span
-                ><span>why one press is one note</span>
+            <div class="scene" data-scene="damper">
+              <div class="split">
+                <div class="half">
+                  <video src="media/demo_damper_on.mp4" loop muted playsinline preload="metadata"></video>
+                  <span class="halflabel">damping 0.1</span>
+                </div>
+                <div class="half">
+                  <video src="media/demo_damper_off.mp4" loop muted playsinline preload="metadata"></video>
+                  <span class="halflabel">damping 0</span>
+                </div>
               </div>
+              <div class="scene-tag"><span>MuJoCo · one key flicked, 5x slow</span><span>same impulse, damper on vs off</span></div>
             </div>
-
             <div class="scene" data-scene="finger">
-              <video
-                src="media/sim_finger.mp4"
-                loop
-                muted
-                playsinline
-                preload="metadata"
-              ></video>
-              <div class="scene-tag">
-                <span>MuJoCo · right hand</span
-                ><span>Shadow Hand, 24 joints</span>
-              </div>
+              <video src="media/sim_finger.mp4" loop muted playsinline preload="metadata"></video>
+              <div class="scene-tag"><span>MuJoCo · right hand</span><span>Shadow Hand, 24 joints</span></div>
             </div>
-
-            <div class="scene diagram" data-scene="tendon">
-              <svg
-                viewBox="0 0 640 210"
-                role="img"
-                aria-label="A finger curling: the knuckle has its own actuator while the middle and tip joints bend together on one tendon."
-              >
-                <rect
-                  x="24"
-                  y="68"
-                  width="92"
-                  height="62"
-                  rx="8"
-                  fill="var(--bg)"
-                  stroke="var(--line)"
-                />
-                <text class="sv-lab-s" x="44" y="104">palm</text>
-                <g transform="translate(116,88)">
-                  <g class="j-mcp">
-                    <rect
-                      x="0"
-                      y="-9"
-                      width="86"
-                      height="18"
-                      rx="9"
-                      fill="var(--text)"
-                      opacity=".85"
-                    />
-                    <circle
-                      cx="0"
-                      cy="0"
-                      r="6"
-                      fill="var(--bg)"
-                      stroke="var(--text)"
-                      stroke-width="2"
-                    />
-                    <g transform="translate(86,0)">
-                      <g class="j-pip">
-                        <rect
-                          x="0"
-                          y="-8"
-                          width="62"
-                          height="16"
-                          rx="8"
-                          fill="var(--text)"
-                          opacity=".85"
-                        />
-                        <circle
-                          cx="0"
-                          cy="0"
-                          r="5.5"
-                          fill="var(--bg)"
-                          stroke="var(--accent)"
-                          stroke-width="2"
-                        />
-                        <g transform="translate(62,0)">
-                          <g class="j-dip">
-                            <rect
-                              x="0"
-                              y="-7"
-                              width="44"
-                              height="14"
-                              rx="7"
-                              fill="var(--text)"
-                              opacity=".85"
-                            />
-                            <circle
-                              cx="0"
-                              cy="0"
-                              r="5"
-                              fill="var(--bg)"
-                              stroke="var(--accent)"
-                              stroke-width="2"
-                            />
-                            <circle cx="44" cy="0" r="6" class="sv-accf" />
-                          </g>
-                        </g>
-                      </g>
-                    </g>
-                  </g>
-                </g>
-                <g transform="translate(116,158)">
-                  <text class="sv-lab-s" x="-92" y="4">one tendon</text>
-                  <line
-                    x1="0"
-                    y1="0"
-                    x2="192"
-                    y2="0"
-                    class="sv-acc tendon"
-                    stroke-width="2"
-                  />
-                  <circle cx="86" cy="0" r="3" class="sv-accf" />
-                  <circle cx="148" cy="0" r="3" class="sv-accf" />
-                </g>
-                <text class="sv-lab" x="150" y="46">MCP</text>
-                <text class="sv-lab-s" x="150" y="60">own actuator</text>
-                <line
-                  x1="162"
-                  y1="52"
-                  x2="128"
-                  y2="76"
-                  class="sv-line"
-                  stroke-dasharray="2 3"
-                />
-                <text class="sv-lab" x="300" y="34" fill="var(--accent)">
-                  PIP + DIP
-                </text>
-                <text class="sv-lab-s" x="300" y="48">
-                  coupled, one actuator
-                </text>
-                <line
-                  x1="318"
-                  y1="54"
-                  x2="300"
-                  y2="74"
-                  class="sv-line"
-                  stroke-dasharray="2 3"
-                />
-                <text class="sv-lab-s" x="24" y="196">
-                  4 joints · 3 actuators per long finger
-                </text>
-              </svg>
-              <div class="scene-tag">
-                <span>tendon coupling</span><span>24 joints, 20 actuators</span>
-              </div>
+            <div class="scene" data-scene="tendon">
+              <video src="media/demo_tendon.mp4" loop muted playsinline preload="metadata"></video>
+              <div class="scene-tag"><span>MuJoCo · one actuator driven</span><span>PIP and DIP bend as a pair</span></div>
             </div>
-
-            <div class="scene" data-scene="travel">
-              <video
-                src="media/sim_travel.mp4"
-                loop
-                muted
-                playsinline
-                preload="metadata"
-              ></video>
-              <div class="scene-tag">
-                <span>MuJoCo · wide</span><span>rails carrying both hands</span>
+            <div class="scene" data-scene="rail">
+              <div class="split">
+                <div class="half">
+                  <video src="media/demo_drag_down.mp4" loop muted playsinline preload="metadata"></video>
+                  <span class="halflabel">fingers down</span>
+                </div>
+                <div class="half">
+                  <video src="media/demo_drag_lift.mp4" loop muted playsinline preload="metadata"></video>
+                  <span class="halflabel">fingers lifted</span>
+                </div>
               </div>
+              <div class="scene-tag"><span>MuJoCo · identical rail traverse</span><span>2 keys brushed vs 0</span></div>
             </div>
-
             <div class="scene diagram" data-scene="loop">
               <svg
                 viewBox="0 0 700 260"
@@ -1548,105 +1265,9 @@
               </div>
             </div>
 
-            <div class="scene diagram" data-scene="rail">
-              <svg
-                viewBox="0 0 700 220"
-                role="img"
-                aria-label="A planned palm position slides along the keyboard while the hand tracks it with a small offset, lifting its fingers whenever the rail travels fast."
-              >
-                <g transform="translate(20,128)">
-                  <rect
-                    x="0"
-                    y="0"
-                    width="660"
-                    height="44"
-                    fill="var(--key)"
-                    stroke="var(--key-edge)"
-                  />
-                  <g stroke="var(--key-edge)" stroke-width=".8">
-                    <line x1="30" y1="0" x2="30" y2="44" />
-                    <line x1="60" y1="0" x2="60" y2="44" />
-                    <line x1="90" y1="0" x2="90" y2="44" />
-                    <line x1="120" y1="0" x2="120" y2="44" />
-                    <line x1="150" y1="0" x2="150" y2="44" />
-                    <line x1="180" y1="0" x2="180" y2="44" />
-                    <line x1="210" y1="0" x2="210" y2="44" />
-                    <line x1="240" y1="0" x2="240" y2="44" />
-                    <line x1="270" y1="0" x2="270" y2="44" />
-                    <line x1="300" y1="0" x2="300" y2="44" />
-                    <line x1="330" y1="0" x2="330" y2="44" />
-                    <line x1="360" y1="0" x2="360" y2="44" />
-                    <line x1="390" y1="0" x2="390" y2="44" />
-                    <line x1="420" y1="0" x2="420" y2="44" />
-                    <line x1="450" y1="0" x2="450" y2="44" />
-                    <line x1="480" y1="0" x2="480" y2="44" />
-                    <line x1="510" y1="0" x2="510" y2="44" />
-                    <line x1="540" y1="0" x2="540" y2="44" />
-                    <line x1="570" y1="0" x2="570" y2="44" />
-                    <line x1="600" y1="0" x2="600" y2="44" />
-                    <line x1="630" y1="0" x2="630" y2="44" />
-                  </g>
-                  <g fill="var(--black-key)">
-                    <rect x="22" y="0" width="16" height="27" />
-                    <rect x="52" y="0" width="16" height="27" />
-                    <rect x="112" y="0" width="16" height="27" />
-                    <rect x="142" y="0" width="16" height="27" />
-                    <rect x="172" y="0" width="16" height="27" />
-                    <rect x="232" y="0" width="16" height="27" />
-                    <rect x="262" y="0" width="16" height="27" />
-                    <rect x="322" y="0" width="16" height="27" />
-                    <rect x="352" y="0" width="16" height="27" />
-                    <rect x="382" y="0" width="16" height="27" />
-                    <rect x="442" y="0" width="16" height="27" />
-                    <rect x="472" y="0" width="16" height="27" />
-                    <rect x="532" y="0" width="16" height="27" />
-                    <rect x="562" y="0" width="16" height="27" />
-                    <rect x="592" y="0" width="16" height="27" />
-                  </g>
-                </g>
-                <g class="rail-plan" transform="translate(20,0)">
-                  <rect
-                    x="60"
-                    y="92"
-                    width="86"
-                    height="30"
-                    fill="none"
-                    stroke="var(--muted)"
-                    stroke-dasharray="4 3"
-                  />
-                  <text class="sv-lab-s" x="60" y="86">planned palm</text>
-                </g>
-                <g class="rail-real" transform="translate(20,0)">
-                  <g class="leap-hand">
-                    <rect
-                      x="64"
-                      y="56"
-                      width="78"
-                      height="40"
-                      rx="7"
-                      fill="var(--text)"
-                      opacity=".88"
-                    />
-                    <g fill="var(--text)">
-                      <rect x="70" y="94" width="9" height="30" rx="4.5" />
-                      <rect x="86" y="94" width="9" height="34" rx="4.5" />
-                      <rect x="102" y="94" width="9" height="32" rx="4.5" />
-                      <rect x="118" y="94" width="9" height="27" rx="4.5" />
-                    </g>
-                    <text class="sv-lab-s" x="64" y="48" fill="var(--accent)">
-                      hand + residual under 5 cm
-                    </text>
-                  </g>
-                </g>
-                <text class="sv-lab-s" x="20" y="200">
-                  rail travelling, fingers curl away from the keys, brushed keys
-                  fall from 101 to 5 per song
-                </text>
-              </svg>
-              <div class="scene-tag">
-                <span>servo setpoint and leap</span
-                ><span>planner drives the rail</span>
-              </div>
+            <div class="scene" data-scene="thumb">
+              <video src="media/demo_thumb_short.mp4" loop muted playsinline preload="metadata"></video>
+              <div class="scene-tag"><span>MuJoCo · thumb at full travel</span><span>no key reaches the threshold</span></div>
             </div>
           </div>
         </div>
@@ -1713,7 +1334,9 @@
                 torsion spring holding it up, a damper, and a travel limit so it
                 stops at the bottom. The site on top is the point the
                 environment measures: how far down the key is, and whether it
-                has crossed the threshold where it sounds.
+                has crossed the threshold where it sounds. In the panel one finger
+                comes down on one key and the key turns orange the instant it crosses
+                that threshold. Nothing else in the hand is moving.
               </p>
             </div>
           </section>
@@ -1725,31 +1348,36 @@
             </div>
             <div class="stack">
               <p>
-                A spring alone stores energy and gives it all back. Hooke's law
-                says the torque is proportional to displacement and points the
-                other way, and the energy it holds grows with the square of that
-                displacement.
+                A spring alone stores energy and gives it all back. Hooke's law says
+                the torque is proportional to displacement and points the other way,
+                and the energy it holds grows with the square of that displacement.
               </p>
             </div>
             <div class="eq">
-              t<sub>spring</sub> = -k (q - q<sub>ref</sub>) &nbsp;&nbsp; U = ½ k
-              (q - q<sub>ref</sub>)²
+              t<sub>spring</sub> = -k (q - q<sub>ref</sub>) &nbsp;&nbsp; U = ½ k (q -
+              q<sub>ref</sub>)²
               <small>k = 3</small>
             </div>
             <div class="stack">
               <p>
-                A finger presses, does work against the spring, and that work
-                becomes <span class="m">U</span>. Release the finger and the
-                energy has nowhere to go. It sloshes between spring and kinetic
-                energy forever, and the key bounces across the sounding
-                threshold over and over. One note becomes a machine gun burst of
-                note ons.
+                A finger presses, does work against the spring, and that work becomes
+                <span class="m">U</span>. Let go and the energy has nowhere to put
+                itself. It sloshes between spring and kinetic energy, and the key keeps
+                crossing back through the depth where it counts as sounding.
               </p>
               <p>
-                The damper stores nothing. It turns motion into heat with a
-                torque opposing velocity, bleeding
-                <span class="m">b q̇²</span> out of the system every cycle, so
-                the key returns to the top once and stays there.
+                The panel is that experiment in the sim. The same key, the same
+                downward flick, run twice with nothing changed but the damper. With
+                <span class="m">damping = 0.1</span> the key is back on its rest stop
+                within 0.15 s and never leaves it again. With
+                <span class="m">damping = 0</span> it comes off the stop twice more and
+                is still moving at 0.29 s. The orange is the environment's own sounding
+                latch: struck past the sound angle, released below 80% of it.
+              </p>
+              <p>
+                The damper stores nothing. It turns motion into heat with a torque
+                opposing velocity, bleeding <span class="m">b q̇²</span> out of the
+                system every cycle, so the key returns to the top once and stays there.
               </p>
             </div>
             <div class="eq">
@@ -1824,36 +1452,44 @@
             </div>
             <div class="stack">
               <p>
-                This is not a modelling shortcut, it copies your hand. Try
-                bending only the tip of your index finger while keeping the
-                middle joint straight. It is impossible, unless you hold the
-                finger with your other hand.
+                This is not a modelling shortcut, it copies your hand. Try bending only
+                the tip of your index finger while keeping the middle joint straight. It
+                is impossible, unless you hold the finger with your other hand.
               </p>
               <p>
-                The practical consequence is that a fingertip cannot be placed
-                freely. Asking for a specific tip height also decides the middle
-                knuckle, which is why black keys, which sit higher and further
-                back, are much harder for the short fingers than white keys are.
+                In the panel only the coupled actuator is being driven. The knuckle is
+                held where it was, and the middle and tip joints swing down together,
+                far enough to sound the key on their own.
+              </p>
+              <p>
+                The practical consequence is that a fingertip cannot be placed freely.
+                Asking for a specific tip height also decides the middle knuckle, which
+                is why black keys, which sit higher and further back, are much harder
+                for the short fingers than white keys are.
               </p>
             </div>
           </section>
 
-          <section class="step" data-scene="travel">
+          <section class="step" data-scene="rail">
             <div class="head">
               <div class="eyebrow">03 · Reach</div>
               <h2>The rail is what makes 88 keys tractable</h2>
             </div>
             <div class="stack">
               <p>
-                A fixed base Shadow Hand covers maybe two octaves. Sliding the
-                whole hand converts "reach an unreachable key" into "be in the
-                right place when the note arrives", which is a planning problem
-                rather than a kinematics one.
+                A fixed base Shadow Hand covers maybe two octaves. Sliding the whole
+                hand converts "reach an unreachable key" into "be in the right place
+                when the note arrives", which is a planning problem rather than a
+                kinematics one.
               </p>
               <p>
-                It also creates the failure mode that cost the most score for
-                the longest time. A hand in motion drags its fingers across
-                every key it passes, and each one of those is a false press.
+                It also creates the failure mode that cost the most score for the
+                longest time. A hand in motion drags its fingers across every key it
+                passes, and each one of those is a false press. The panel runs the same
+                26 cm traverse twice: on the left the fingers stay at the extension they
+                press from and two keys sound on the way past, neither of them asked
+                for. On the right the flexors curl away as soon as the rail moves and
+                nothing sounds at all.
               </p>
             </div>
           </section>
@@ -2245,7 +1881,7 @@
             </p>
           </section>
 
-          <section class="step" data-scene="top">
+          <section class="step" data-scene="thumb">
             <div class="head">
               <div class="eyebrow">09 · What is still missing</div>
               <h2>Recall 0.715 against precision 0.914</h2>
@@ -2270,9 +1906,12 @@
                 <b>Dead thumbs</b
                 ><span
                   >Per finger probing through the actuators found the thumbs
-                  sounding no key at all in the ready pose. v15 excludes them
-                  from assignment, which is a workaround, not a solution.</span
-                >
+                  >Per finger probing through the actuators found the thumbs
+                  sounding no key at all in the ready pose. The panel drives the
+                  thumb to the end of its travel from the same hand position where
+                  the index scores a note, and the key never reaches the sounding
+                  depth. v15 excludes the thumbs from assignment, which is a
+                  workaround, not a solution.</span
               </li>
               <li>
                 <b>Same finger octaves</b
@@ -2630,44 +2269,61 @@
             scenes[k].forEach(function (el) {
               var on = k === key;
               el.classList.toggle("active", on);
-              var v = el.querySelector("video");
-              if (!v) return;
-              if (on) {
-                var p = v.play();
-                if (p && p.catch) p.catch(function () {});
-              } else {
-                v.pause();
-              }
+              var vids = el.querySelectorAll("video");
+              vids.forEach(function (v) {
+                if (on) {
+                  // restart together so a side-by-side pair stays in lockstep
+                  try {
+                    v.currentTime = 0;
+                  } catch (e) {}
+                  var p = v.play();
+                  if (p && p.catch) p.catch(function () {});
+                } else {
+                  v.pause();
+                }
+              });
             });
           });
         }
 
         // first scene visible immediately so the panel is never blank
-        var firstStep = document.querySelector(".step[data-scene]");
-        setScene(firstStep ? firstStep.getAttribute("data-scene") : "top");
+        // Scene switching: on every scroll, pick the step whose centre is
+        // nearest the viewport centre. Deterministic, unlike reacting to
+        // IntersectionObserver batches, which can miss a fast jump.
+        var steps = [].slice.call(document.querySelectorAll(".step[data-scene]"));
+        var current = null;
+        var queued = false;
+        function pickScene() {
+          queued = false;
+          if (!steps.length) return;
+          var mid = window.innerHeight / 2;
+          var best = steps[0],
+            bestD = Infinity;
+          steps.forEach(function (s) {
+            var r = s.getBoundingClientRect();
+            var d = Math.abs(r.top + r.height / 2 - mid);
+            if (d < bestD) {
+              bestD = d;
+              best = s;
+            }
+          });
+          var key = best.getAttribute("data-scene");
+          if (key !== current) {
+            current = key;
+            setScene(key);
+          }
+        }
+        function onScroll() {
+          if (!queued) {
+            queued = true;
+            window.requestAnimationFrame(pickScene);
+          }
+        }
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll);
+        pickScene();
 
         if ("IntersectionObserver" in window) {
-          var stepObs = new IntersectionObserver(
-            function (entries) {
-              // pick the entry closest to the middle of the viewport
-              var best = null,
-                bestD = Infinity;
-              entries.forEach(function (e) {
-                if (!e.isIntersecting) return;
-                var r = e.target.getBoundingClientRect();
-                var d = Math.abs(r.top + r.height / 2 - window.innerHeight / 2);
-                if (d < bestD) {
-                  bestD = d;
-                  best = e.target;
-                }
-              });
-              if (best) setScene(best.getAttribute("data-scene"));
-            },
-            { rootMargin: "-35% 0px -35% 0px", threshold: 0 },
-          );
-          document.querySelectorAll(".step[data-scene]").forEach(function (s) {
-            stepObs.observe(s);
-          });
 
           if (!reduce) {
             document.documentElement.classList.add("js-reveal");
