@@ -286,6 +286,12 @@
         height: 100%;
         object-fit: cover;
       }
+      .scene.film {
+        background: #121214;
+      }
+      .scene.film video {
+        object-fit: contain;
+      }
       .scene.diagram {
         padding: clamp(12px, 2vw, 22px);
         background: var(--surface);
@@ -1041,228 +1047,25 @@
               </div>
               <div class="scene-tag"><span>MuJoCo · identical rail traverse</span><span>2 keys brushed vs 0</span></div>
             </div>
-            <div class="scene diagram" data-scene="loop">
-              <svg
-                viewBox="0 0 700 260"
-                role="img"
-                aria-label="Control loop: observations flow into the actor network, which outputs joint residuals and hold flags into MuJoCo, which returns a new state and reward."
-              >
-                <text class="sv-lab" x="10" y="22">OBSERVATION · 1272</text>
-                <g font-family="monospace" font-size="9.5" fill="var(--text)">
-                  <rect
-                    x="10"
-                    y="32"
-                    width="166"
-                    height="20"
-                    fill="var(--bg)"
-                    stroke="var(--line)"
-                  />
-                  <text x="18" y="46">hand joints + rails · 52</text>
-                  <rect
-                    x="10"
-                    y="56"
-                    width="166"
-                    height="20"
-                    fill="var(--bg)"
-                    stroke="var(--line)"
-                  />
-                  <text x="18" y="70">key positions · 88</text>
-                  <rect
-                    x="10"
-                    y="80"
-                    width="166"
-                    height="20"
-                    fill="var(--accent-soft)"
-                    stroke="var(--accent)"
-                  />
-                  <text x="18" y="94" fill="var(--accent)">
-                    piano roll · 88 x 10
-                  </text>
-                  <rect
-                    x="10"
-                    y="104"
-                    width="166"
-                    height="20"
-                    fill="var(--bg)"
-                    stroke="var(--line)"
-                  />
-                  <text x="18" y="118">key windows · 96</text>
-                  <rect
-                    x="10"
-                    y="128"
-                    width="166"
-                    height="20"
-                    fill="var(--bg)"
-                    stroke="var(--line)"
-                  />
-                  <text x="18" y="142">per-finger targets · 60</text>
-                  <rect
-                    x="10"
-                    y="152"
-                    width="166"
-                    height="20"
-                    fill="var(--bg)"
-                    stroke="var(--line)"
-                  />
-                  <text x="18" y="166">hold state · 30</text>
-                  <rect
-                    x="10"
-                    y="176"
-                    width="166"
-                    height="20"
-                    fill="var(--bg)"
-                    stroke="var(--line)"
-                  />
-                  <text x="18" y="190">upcoming notes · 12</text>
-                  <rect
-                    x="10"
-                    y="200"
-                    width="166"
-                    height="20"
-                    fill="var(--bg)"
-                    stroke="var(--line)"
-                  />
-                  <text x="18" y="214">previous action · 52</text>
-                </g>
-                <line
-                  x1="182"
-                  y1="126"
-                  x2="246"
-                  y2="126"
-                  class="sv-acc flow"
-                  stroke-width="2"
-                />
-                <path d="M246 126 l-7 -4 l0 8 z" class="sv-accf" />
-                <text class="sv-lab-s" x="186" y="118">normalise</text>
-                <rect
-                  x="252"
-                  y="62"
-                  width="132"
-                  height="128"
-                  fill="var(--bg)"
-                  stroke="var(--text)"
-                />
-                <text class="sv-lab" x="264" y="82" fill="var(--text)">
-                  ACTOR
-                </text>
-                <g font-family="monospace" font-size="9.5" fill="var(--muted)">
-                  <text x="264" y="104">1024</text>
-                  <rect
-                    class="glow-a"
-                    x="300"
-                    y="96"
-                    width="70"
-                    height="9"
-                    fill="var(--accent)"
-                  />
-                  <text x="264" y="126">512</text>
-                  <rect
-                    class="glow-b"
-                    x="300"
-                    y="118"
-                    width="46"
-                    height="9"
-                    fill="var(--accent)"
-                  />
-                  <text x="264" y="148">256</text>
-                  <rect
-                    class="glow-c"
-                    x="300"
-                    y="140"
-                    width="28"
-                    height="9"
-                    fill="var(--accent)"
-                  />
-                  <text x="264" y="176">ELU · Gaussian</text>
-                </g>
-                <rect
-                  x="252"
-                  y="204"
-                  width="132"
-                  height="42"
-                  fill="var(--bg)"
-                  stroke="var(--line)"
-                  stroke-dasharray="3 3"
-                />
-                <text class="sv-lab" x="264" y="222">CRITIC to V</text>
-                <text class="sv-lab-s" x="264" y="238">
-                  +11 privileged dims
-                </text>
-                <line
-                  x1="176"
-                  y1="225"
-                  x2="246"
-                  y2="225"
-                  class="sv-line"
-                  stroke-dasharray="3 3"
-                />
-                <path d="M246 225 l-7 -4 l0 8 z" class="sv-mut" />
-                <line
-                  x1="390"
-                  y1="126"
-                  x2="450"
-                  y2="126"
-                  class="sv-acc flow"
-                  stroke-width="2"
-                />
-                <path d="M450 126 l-7 -4 l0 8 z" class="sv-accf" />
-                <text class="sv-lab" x="456" y="22">ACTION · 52</text>
-                <g font-family="monospace" font-size="9.5" fill="var(--text)">
-                  <rect
-                    x="456"
-                    y="76"
-                    width="152"
-                    height="22"
-                    fill="var(--bg)"
-                    stroke="var(--line)"
-                  />
-                  <text x="464" y="91">20 hand actuators x2</text>
-                  <rect
-                    x="456"
-                    y="102"
-                    width="152"
-                    height="22"
-                    fill="var(--bg)"
-                    stroke="var(--line)"
-                  />
-                  <text x="464" y="117">rail residual x2</text>
-                  <rect
-                    x="456"
-                    y="128"
-                    width="152"
-                    height="22"
-                    fill="var(--accent-soft)"
-                    stroke="var(--accent)"
-                  />
-                  <text x="464" y="143" fill="var(--accent)">
-                    10 hold flags
-                  </text>
-                </g>
-                <rect
-                  x="618"
-                  y="76"
-                  width="72"
-                  height="74"
-                  fill="var(--bg)"
-                  stroke="var(--text)"
-                />
-                <text class="sv-lab" x="628" y="100" fill="var(--text)">
-                  MuJoCo
-                </text>
-                <text class="sv-lab-s" x="628" y="116">step</text>
-                <text class="sv-lab-s" x="628" y="130">reward</text>
-                <path
-                  d="M654 154 L654 236 L400 236"
-                  class="sv-line flow"
-                  stroke-width="1.5"
-                  fill="none"
-                />
-                <path d="M400 236 l7 -4 l0 8 z" class="sv-mut" />
-                <text class="sv-lab-s" x="470" y="232">new state + reward</text>
-              </svg>
-              <div class="scene-tag">
-                <span>one control step</span><span>1272 in, 52 out</span>
-              </div>
+            <div class="scene film" data-scene="loop">
+              <video src="media/fig_loop.mp4" poster="media/fig_loop.jpg" loop muted playsinline preload="metadata"
+                aria-label="Animation of the control loop: observations flow into the actor network, which outputs joint residuals and hold flags into MuJoCo, which returns a new state and reward."></video>
+              <div class="scene-tag"><span>one control step</span><span>1272 in, 52 out</span></div>
+            </div>
+            <div class="scene film" data-scene="forward">
+              <video src="media/fig_forward.mp4" poster="media/fig_forward.jpg" loop muted playsinline preload="metadata"
+                aria-label="Animation of one rollout step: the state splits into the actor observation and the critic's privileged extras, each is normalized and run through its MLP, an action is sampled from the actor's Gaussian, and one row is written to rollout storage."></video>
+              <div class="scene-tag"><span>one rollout step, one env</span><span>pedal era dims · 1175 in, 43 out</span></div>
+            </div>
+            <div class="scene film" data-scene="ac">
+              <video src="media/fig_actor_critic.mp4" poster="media/fig_actor_critic.jpg" loop muted playsinline preload="metadata"
+                aria-label="Animation: the actor outputs a Gaussian over actions and the critic outputs V(s). When reward plus the discounted value of the next state beats V(s), the advantage is positive and the Gaussian shifts toward the sampled action; when it falls short, it shifts away."></video>
+              <div class="scene-tag"><span>how V judges an action</span><span>numbers illustrative</span></div>
+            </div>
+            <div class="scene film" data-scene="update">
+              <video src="media/fig_update.mp4" poster="media/fig_update.jpg" loop muted playsinline preload="metadata"
+                aria-label="Animation of the PPO update: advantages computed backward over 32 stored steps, normalized, then the clipped objective flattening once the probability ratio leaves 1 plus or minus 0.2."></video>
+              <div class="scene-tag"><span>one PPO update</span><span>5 epochs × 4 minibatches</span></div>
             </div>
 
             <div class="scene" data-scene="thumb">
@@ -1543,7 +1346,7 @@
             </div>
           </section>
 
-          <section class="step" data-scene="loop">
+          <section class="step" data-scene="forward">
             <div class="head">
               <div class="eyebrow">05 · The forward pass</div>
               <h2>What happens in one step, start to finish</h2>
@@ -1598,51 +1401,6 @@
                 all 1024 environments before anything is learned from.
               </p>
             </div>
-            <pre class="flowchart">
-                         MuJoCo state (one env)
-                                 │
-                 ┌───────────────┴────────────────┐
-                 ▼                                ▼
-        _get_obs_ego (1175)             critic_extras (11)
-        joints, rails, 88 keys,          fingertip forces,
-        piano roll, 12-key windows,      hand-vs-hand flag
-        upcoming notes, pedal, prev act
-                 │                                │
-                 ├──────────────┐                 │
-                 ▼              ▼                 ▼
-          "policy" group     concat ["policy", "critic_priv"] (1186)
-                 │                       │
-                 ▼                       ▼
-     actor normalizer (x-μ)/σ    critic normalizer (x-μ)/σ
-                 │                       │
-                 ▼                       ▼
-         1175 → 512 → ELU        1186 → 512 → ELU
-              → 256 → ELU             → 256 → ELU
-              → 128 → ELU             → 128 → ELU
-              → 43                    → 1
-                 │                       │
-                 ▼                       ▼
-          mean μ (43)               V(s)  one number
-                 │                       │
-    learned std σ (43) ──┐               │
-                 ▼       │               │
-        Normal(μ, σ).sample()            │
-                 │                       │
-                 ▼                       │
-          action a (43)                  │
-                 │                       │
-                 ├── log π(a|s) ─────────┤
-                 │                       │
-                 ▼                       ▼
-     env.step(a): residual on        rollout storage, one row:
-     ready pose → ctrl → 10          obs, a, log π(a|s), V(s), μ, σ
-     physics substeps                          ▲
-                 │                             │
-                 ▼                             │
-       reward r, done, timeout ────────────────┘
-                 │
-                 ▼
-       next MuJoCo state  (loop back to top)</pre>
             <p
               style="
                 font-family: var(--mono);
@@ -1651,7 +1409,7 @@
                 line-height: 1.5;
               "
             >
-              These are the dimensions of the pedal era network, 1175
+              The panel shows the dimensions of the pedal era network, 1175
               observations and 43 actions into a 512-256-128 MLP. The shape of
               the loop never changed. By v15 the observation had grown to 1272,
               the action to 52 because the pedal became ten per finger hold
@@ -1659,9 +1417,75 @@
             </p>
           </section>
 
+          <section class="step" data-scene="ac">
+            <div class="head">
+              <div class="eyebrow">06 · Actor and critic</div>
+              <h2>Two networks, two jobs</h2>
+            </div>
+            <div class="stack">
+              <p>
+                The model is an actor critic, trained with proximal policy
+                optimization. The two networks are built the same way, a stack
+                of linear layers with ELU in between, but they answer different
+                questions. The actor generates actions. Given the state of the
+                hands, the keys and the score, it outputs the Gaussian that the
+                action is sampled from. The critic evaluates the state. Its
+                output is a single number, <span class="m">V(s)</span>, its
+                estimate of how much reward is still coming from here.
+              </p>
+              <p>
+                V never plays a note. Its job is to give the actor something to
+                compare against. A reward of +1.4 on its own says little about
+                whether the action was any good, because some moments in the
+                song pay well whatever the hands do and some are hard whatever
+                they do. What the actor needs to know is whether this step went
+                better or worse than the critic expected from this state.
+              </p>
+            </div>
+            <div class="eq">
+              A = r + 0.99·V(s′) − V(s)
+              <small
+                >the advantage of one step: what actually happened, minus what
+                the critic predicted. Section 09 builds GAE out of exactly this
+                term</small
+              >
+            </div>
+            <div class="stack">
+              <p>
+                If the advantage is positive, the action beat the critic's
+                expectation, and the update makes it more likely by moving the
+                actor's mean toward it. If it is negative, the update moves the
+                mean away. At the same time the critic is regressed toward that
+                same target, <span class="m">r + 0.99·V(s′)</span>, so its next
+                guess for a state like this one is a little closer.
+              </p>
+              <p>
+                The two depend on each other. A better critic gives sharper
+                advantages, sharper advantages give the actor a cleaner signal,
+                and a better actor reaches states the critic then has to learn
+                to value. That loop is why the critic gets the privileged
+                contact forces from section 04. Anything that makes V more
+                accurate makes every actor update less noisy.
+              </p>
+            </div>
+            <p
+              style="
+                font-family: var(--mono);
+                font-size: 0.72rem;
+                color: var(--muted);
+                line-height: 1.5;
+              "
+            >
+              The panel shows two samples from the same state. The first earns
+              more than the critic predicted, A = +0.8, and the Gaussian moves
+              toward it. The second is a false press, A = −0.7, and the Gaussian
+              moves away. The numbers are illustrative.
+            </p>
+          </section>
+
           <section class="step" data-scene="rail">
             <div class="head">
-              <div class="eyebrow">06 · Fingering</div>
+              <div class="eyebrow">07 · Fingering</div>
               <h2>Deciding which finger takes which note</h2>
             </div>
             <div class="stack">
@@ -1691,7 +1515,7 @@
 
           <section class="step" data-scene="keys">
             <div class="head">
-              <div class="eyebrow">07 · Reward</div>
+              <div class="eyebrow">08 · Reward</div>
               <h2>Six terms, and one that decides whether anything works</h2>
             </div>
             <div class="stack">
@@ -1768,9 +1592,9 @@
             </ul>
           </section>
 
-          <section class="step" data-scene="loop">
+          <section class="step" data-scene="update">
             <div class="head">
-              <div class="eyebrow">08 · The update</div>
+              <div class="eyebrow">09 · The update</div>
               <h2>GAE, then five epochs over the same 32 steps</h2>
             </div>
             <div class="stack">
@@ -1835,36 +1659,6 @@
                 drops, too little and it rises.
               </p>
             </div>
-            <pre class="flowchart">
-      stored V(s_t), r_t, done_t, and V(s_last) from one more critic call
-                                 │
-                                 ▼
-                  GAE, walking backward over the 32 steps
-                  δ_t = r_t + 0.99·V(s_t+1) − V(s_t)
-                  A_t = δ_t + 0.99·0.95·A_t+1
-                  R_t = A_t + V(s_t)
-                                 │
-              ┌──────────────────┴──────────────────┐
-              ▼                                     ▼
-      advantages A_t                         returns R_t
-      normalized over the batch                     │
-              │                                     │
-   5 epochs × 4 minibatches of 512:                 │
-              │                                     │
-              ▼                                     ▼
-  actor forward on stored obs         critic forward on stored obs
-  new μ, σ → new log π(a|s)           new V(s)
-              │                                     │
-              ▼                                     ▼
-  ratio = exp(new log π − old log π)   value loss = (V(s) − R_t)²
-  policy loss = −A_t · clip(ratio)           (clipped variant)
-  entropy bonus = 0.001 · H(σ)                      │
-              │                                     │
-              └──────────── sum ────────────────────┘
-                                 │
-                                 ▼
-             one Adam optimizer over actor + critic params
-             grad clip 0.5, LR adjusted by measured KL</pre>
             <p
               style="
                 font-family: var(--mono);
@@ -1877,13 +1671,14 @@
               adaptive learning rate targeting KL 0.01. The entropy coefficient
               was the second largest single lever in the project. At 0.006 the
               action std drifted from 0.5 to 1.47 and F1 sat flat from iteration
-              800 onward.
+              800 onward. The rewards and values in the panel are illustrative. γ, λ, the clip
+              range and the batch layout are the trained ones.
             </p>
           </section>
 
           <section class="step" data-scene="thumb">
             <div class="head">
-              <div class="eyebrow">09 · What is still missing</div>
+              <div class="eyebrow">10 · What is still missing</div>
               <h2>Recall 0.715 against precision 0.914</h2>
             </div>
             <div class="stack">
@@ -1930,7 +1725,7 @@
       <section class="band">
         <div class="col reveal">
           <div class="head">
-            <div class="eyebrow">10 · Results</div>
+            <div class="eyebrow">11 · Results</div>
             <h2>0.673 to 0.803, one bottleneck at a time</h2>
           </div>
           <p>
@@ -2179,7 +1974,7 @@
       <section class="band">
         <div class="col reveal">
           <div class="head">
-            <div class="eyebrow">11 · Listen</div>
+            <div class="eyebrow">12 · Listen</div>
             <h2>The full 64 seconds</h2>
           </div>
           <p>
@@ -2222,7 +2017,7 @@
       <section class="band">
         <div class="col reveal">
           <div class="head">
-            <div class="eyebrow">12 · What the project taught</div>
+            <div class="eyebrow">13 · What the project taught</div>
             <h2>Most of the leverage was not in the learning algorithm</h2>
           </div>
           <div class="stack">
@@ -2249,7 +2044,7 @@
       <footer class="col">
         MuJoCo · rsl_rl PPO · Shadow Hand from MuJoCo Menagerie · trained on a
         single A100 · no demonstrations, no behaviour cloning, no pretrained
-        weights
+        weights · diagrams animated with Manim
       </footer>
     </div>
 
